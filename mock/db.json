@@ -1,0 +1,35 @@
+{
+  "cycles": [
+    {
+      "id": "1",
+      "name": "Q2 2025 - LAJE",
+      "project_name": "LAJE",
+      "start_date": "2025-04-01",
+      "end_date": "2025-06-30",
+      "status": "active"
+    },
+    {
+      "id": "2",
+      "name": "Q2 2025 - HUB NORTE",
+      "project_name": "HUB NORTE",
+      "start_date": "2025-04-01",
+      "end_date": "2025-07-31",
+      "status": "active"
+    },
+    {
+      "id": "3",
+      "name": "Q1 2025 - CHIVILCOY",
+      "project_name": "CHIVILCOY",
+      "start_date": "2025-01-01",
+      "end_date": "2025-03-31",
+      "status": "closed"
+    }
+  ],
+  "people": [
+    { "id": "p1", "name": "Carlos Rodríguez", "legajo": "12345" },
+    { "id": "p2", "name": "María González", "legajo": "12346" },
+    { "id": "p3", "name": "Juan Pérez", "legajo": "12347" },
+    { "id": "p4", "name": "Ana Martínez", "legajo": "12348" },
+    { "id": "p5", "name": "Roberto Silva", "legajo": "12349" }
+  ]
+}

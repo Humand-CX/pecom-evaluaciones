@@ -1,0 +1,4 @@
+import { z } from 'zod';
+
+export const nameSchema = z.object({ name: z.string().min(1, 'Requerido') });
+export type NameFormValues = z.infer<typeof nameSchema>;

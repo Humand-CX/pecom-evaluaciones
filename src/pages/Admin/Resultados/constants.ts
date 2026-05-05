@@ -1,0 +1,148 @@
+type EvaluationResult = {
+  cycleId: string;
+  personId: string;
+  scores: Record<string, number>;
+};
+
+export const MOCK_RESULTS: EvaluationResult[] = [
+  {
+    cycleId: '1',
+    personId: 'p1',
+    scores: {
+      seguridad: 4,
+      peligros: 3,
+      cultura: 5,
+      'conocimiento-aplicacion': 4,
+      herramientas: 4,
+      responsabilidad: 5,
+      colaboracion: 4,
+      proactividad: 3,
+    },
+  },
+  {
+    cycleId: '1',
+    personId: 'p2',
+    scores: {
+      seguridad: 1,
+      peligros: 2,
+      cultura: 3,
+      'conocimiento-aplicacion': 2,
+      herramientas: 3,
+      responsabilidad: 2,
+      colaboracion: 3,
+      proactividad: 2,
+    },
+  },
+  {
+    cycleId: '1',
+    personId: 'p3',
+    scores: {
+      seguridad: 5,
+      peligros: 5,
+      cultura: 4,
+      'conocimiento-aplicacion': 5,
+      herramientas: 4,
+      responsabilidad: 5,
+      colaboracion: 5,
+      proactividad: 4,
+    },
+  },
+  {
+    cycleId: '1',
+    personId: 'p4',
+    scores: {
+      seguridad: 3,
+      peligros: 3,
+      cultura: 3,
+      'conocimiento-aplicacion': 3,
+      herramientas: 3,
+      responsabilidad: 3,
+      colaboracion: 3,
+      proactividad: 3,
+    },
+  },
+  {
+    cycleId: '1',
+    personId: 'p5',
+    scores: {
+      seguridad: 4,
+      peligros: 4,
+      cultura: 4,
+      'conocimiento-aplicacion': 1,
+      herramientas: 4,
+      responsabilidad: 4,
+      colaboracion: 4,
+      proactividad: 4,
+    },
+  },
+  {
+    cycleId: '2',
+    personId: 'p1',
+    scores: {
+      seguridad: 5,
+      peligros: 4,
+      cultura: 5,
+      'conocimiento-aplicacion': 5,
+      herramientas: 5,
+      responsabilidad: 5,
+      colaboracion: 4,
+      proactividad: 4,
+    },
+  },
+  {
+    cycleId: '2',
+    personId: 'p2',
+    scores: {
+      seguridad: 2,
+      peligros: 3,
+      cultura: 2,
+      'conocimiento-aplicacion': 3,
+      herramientas: 2,
+      responsabilidad: 3,
+      colaboracion: 2,
+      proactividad: 3,
+    },
+  },
+  {
+    cycleId: '2',
+    personId: 'p3',
+    scores: {
+      seguridad: 4,
+      peligros: 5,
+      cultura: 4,
+      'conocimiento-aplicacion': 4,
+      herramientas: 5,
+      responsabilidad: 4,
+      colaboracion: 5,
+      proactividad: 5,
+    },
+  },
+  {
+    cycleId: '2',
+    personId: 'p4',
+    scores: {
+      seguridad: 1,
+      peligros: 2,
+      cultura: 3,
+      'conocimiento-aplicacion': 2,
+      herramientas: 3,
+      responsabilidad: 2,
+      colaboracion: 3,
+      proactividad: 2,
+    },
+  },
+  {
+    cycleId: '2',
+    personId: 'p5',
+    scores: {
+      seguridad: 4,
+      peligros: 3,
+      cultura: 4,
+      'conocimiento-aplicacion': 4,
+      herramientas: 3,
+      responsabilidad: 4,
+      colaboracion: 4,
+      proactividad: 3,
+    },
+  },
+];
