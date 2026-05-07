@@ -1,0 +1,219 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    RESUMEN RÁPIDO PARA AGUSTINA                              ║
+║                         Trabajar en Paralelo                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+👋 Hola Agustina,
+
+He completado la primera fase del proyecto PeComEvaluaciones. Aquí está lo que
+necesitás saber para empezar a trabajar en paralelo.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ QUÉ YA ESTÁ HECHO (Por Federica)
+═══════════════════════════════════════════════════════════════════════════════
+
+- Ciclos configurables (seleccionar dimensiones + segmentos por ciclo)
+- Asignación de evaluadores (manual: 1 evaluador → múltiples personas × dimensiones)
+- Importación CSV masiva (carga múltiples asignaciones a la vez)
+- Filtrado automático de dimensiones en vistas
+- Duplicación de dimensiones con un click
+- Vista de detalles de ciclos con progreso visual
+- Contexto global EvaluatorAssignments con localStorage
+- Documentación completa (FLUJOS_IMPLEMENTADOS.md, DIAGRAMA_FLUJOS.txt, STATUS.md)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚡ PASOS RÁPIDOS PARA EMPEZAR
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Clonar repo (si no lo hiciste):
+   $ git clone https://github.com/Humand-CX/pecom-evaluaciones
+   $ cd pecom-evaluaciones
+
+2. Crear tu rama:
+   $ git checkout -b agustina/features
+
+3. Instalar dependencias:
+   $ npm install
+
+4. Correr el proyecto:
+   $ npm run dev
+
+   → Acceder a http://localhost:5173
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTACIÓN DISPONIBLE (EN ORDEN DE LECTURA)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. STATUS.md (10 min)
+   → Resumen ejecutivo y estado actual
+
+2. DIAGRAMA_FLUJOS.txt (15 min)
+   → 10 diagramas visuales de los flujos en ASCII
+
+3. FLUJOS_IMPLEMENTADOS.md (30 min)
+   → Descripción COMPLETA de cada flujo (1000+ líneas)
+   → Paso a paso, código, ejemplos, validaciones
+
+4. INSTRUCCIONES_AGUSTINA.md (20 min)
+   → TE TOCA A VOS - Guía paso a paso para implementar features
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 QUÉ FEATURES PODÉS IMPLEMENTAR
+═══════════════════════════════════════════════════════════════════════════════
+
+Elegí la que te interese:
+
+OPCIÓN A: Filtrar personas por evaluador (⭐ Fácil - 2-3 horas)
+  → En la matriz, mostrar solo personas asignadas al evaluador
+  → Archivo: MatrizEvaluacion/index.tsx
+  → Lógica: Filtrar MOCK_PEOPLE por assignments del evaluador actual
+
+OPCIÓN B: Editar/Eliminar asignaciones (⭐⭐ Media - 4-5 horas)
+  → Botones para editar o eliminar asignaciones creadas
+  → Archivos: EvaluatorAssignmentsContext.tsx (agregar métodos),
+              GestionCiclos/index.tsx (agregar tabla/modales)
+  → Lógica: updateAssignment, deleteAssignment, UI para CRUD
+
+OPCIÓN C: Validar evaluator_id en CSV (⭐ Fácil - 1-2 horas)
+  → Verificar que evaluator_id existe antes de importar CSV
+  → Archivo: CSVImportModal.tsx
+  → Lógica: if (!MOCK_EVALUATORS.find(e => e.id === row.evaluator_id)) → error
+
+OPCIÓN D: Exportar asignaciones a CSV (⭐⭐ Media - 3-4 horas)
+  → Botón para descargar asignaciones del ciclo como CSV
+  → Archivos: CycleDetailsModal.tsx, GestionCiclos/index.tsx
+  → Lógica: Generar CSV, crear blob, descargar
+
+OPCIÓN E: Notificaciones (⭐⭐⭐ Media-Difícil - 5-6 horas)
+  → Toast cuando se crean asignaciones (manual o CSV)
+  → Archivos: EvaluatorAssignmentModal.tsx, CSVImportModal.tsx
+  → Lógica: Toast/snackbar con message de cantidad creada
+
+MI RECOMENDACIÓN:
+  1. Comienza con OPCIÓN C (validar evaluator_id) - 1-2 horas, fácil
+  2. Luego OPCIÓN A (filtrar personas) - 2-3 horas, medio
+  3. Si hay tiempo: OPCIÓN D (exportar) - 3-4 horas
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🔧 WORKFLOW DE DESARROLLO
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Elegir feature (arriba)
+
+2. Entender el código:
+   - Abre el archivo a modificar
+   - Lee comentarios y estructura
+   - Entiende qué hooks/providers se usan
+
+3. Hacer cambios:
+   - Modifica el archivo
+   - Testea en http://localhost:5173
+   - Revisa que no haya errores en consola
+
+4. Hacer commit:
+   ```bash
+   git add [archivo_modificado]
+   git commit -m "feat: Descripción breve
+
+   - Qué hiciste
+   - Cómo funciona
+
+   Co-Authored-By: Agustina <agustina@humand.co>"
+   ```
+
+5. Hacer push:
+   ```bash
+   git push -u origin agustina/features
+   ```
+
+6. Crear Pull Request en GitHub:
+   - Ve a: https://github.com/Humand-CX/pecom-evaluaciones
+   - Click en "Compare & pull request"
+   - Asigna a Federica como reviewer
+   - Federica revisa y mergea a main
+
+═══════════════════════════════════════════════════════════════════════════════
+
+💾 ARCHIVOS CLAVE A CONOCER
+═══════════════════════════════════════════════════════════════════════════════
+
+Estructura principal:
+  src/
+  ├── pages/Admin/GestionCiclos/          ← Aquí está la acción
+  │   ├── index.tsx                       ← Tabla de ciclos
+  │   ├── CSVImportModal.tsx              ← CSV import (Option C/D)
+  │   ├── EvaluatorAssignmentModal.tsx    ← Asignación manual
+  │   ├── CycleDetailsModal.tsx           ← Detalles del ciclo
+  │   └── schema.ts                       ← Validaciones
+  ├── pages/Evaluador/MatrizEvaluacion/
+  │   └── index.tsx                       ← Donde evalúa (Option A)
+  ├── providers/
+  │   └── EvaluatorAssignmentsContext.tsx ← Context de asignaciones
+  └── types/
+      └── evaluatorAssignments.ts         ← Tipos de datos
+
+Constantes y mock data:
+  src/pages/Evaluador/MatrizEvaluacion/constants.ts
+    → MOCK_PEOPLE, MOCK_EVALUATORS, DIMENSIONS, etc.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+❓ PREGUNTAS RÁPIDAS
+═══════════════════════════════════════════════════════════════════════════════
+
+"¿Qué es dimensionIds?"
+  → Array de IDs de dimensiones que evalúa el ciclo
+  → Ej: ["disciplina", "actitud"]
+  → Sirve para mostrar solo esas dimensiones en vistas
+
+"¿Cómo accedo a evaluadores?"
+  → import { MOCK_EVALUATORS } from '@/pages/Evaluador/MatrizEvaluacion/constants'
+  → Formato: {id, name}
+
+"¿Dónde está la lista de personas?"
+  → import { MOCK_PEOPLE } from '@/pages/Evaluador/MatrizEvaluacion/constants'
+  → Formato: {id, name, legajo}
+
+"¿Cómo uso los contextos?"
+  → const { dimensions } = useDimensions();
+  → const { assignments } = useEvaluatorAssignments();
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 SIGUIENTE PASO
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Lee INSTRUCCIONES_AGUSTINA.md (tiene TODO el detalle)
+2. Sigue los pasos de "Preparar tu Ambiente"
+3. Elige una feature
+4. ¡Implementa!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📞 CONTACTO
+═══════════════════════════════════════════════════════════════════════════════
+
+Federica Correa
+Email: federica.correa@humand.co
+
+Si tienes preguntas técnicas o dudas:
+- Revisa INSTRUCCIONES_AGUSTINA.md (tiene sección de FAQ)
+- Pregunta en Slack o email
+- Abre un issue en GitHub si encontrás un problema
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ ¡Bienvenida al equipo!
+
+Todo está documentado y listo para que empieces. No es complicado.
+
+Cualquier duda, aviso.
+
+¡A programar! 🚀
+
+═══════════════════════════════════════════════════════════════════════════════
