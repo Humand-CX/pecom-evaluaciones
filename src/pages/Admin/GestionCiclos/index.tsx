@@ -31,6 +31,7 @@ import { MOCK_CYCLES, STATUS_CONFIG } from '../../Evaluador/CiclosActivos/consta
 import { CycleForm } from './components/CycleForm';
 import { CSVImportModal } from './CSVImportModal';
 import { CycleDetailsModal } from './CycleDetailsModal';
+import { EvaluatorAssignmentModal } from './EvaluatorAssignmentModal';
 import { type CycleFormValues } from './schema';
 
 const formatDate = (dateStr: string) =>
@@ -51,7 +52,12 @@ export const GestionCiclosPage = () => {
     } else {
       const newCycle: Cycle = {
         id: String(Date.now()),
-        ...values,
+        name: values.name || '',
+        project_name: values.project_name || '',
+        start_date: values.start_date || '',
+        end_date: values.end_date || '',
+        dimensionIds: values.dimensionIds || [],
+        segmentIds: values.segmentIds || [],
         status: 'draft',
       };
       setCycles(prev => [...prev, newCycle]);
@@ -81,6 +87,7 @@ export const GestionCiclosPage = () => {
             start_date: cycle.start_date,
             end_date: cycle.end_date,
             dimensionIds: cycle.dimensionIds ?? [],
+            segmentIds: cycle.segmentIds ?? [],
           }}
         />
       ),
@@ -114,6 +121,16 @@ export const GestionCiclosPage = () => {
       title: `${cycle.name} - Detalles`,
       size: 'large',
       children: <CycleDetailsModal cycle={cycle} />,
+      primaryButtonProps: { disabled: true },
+      secondaryButtonProps: { children: 'Cerrar', onClick: () => closeDrawer() },
+    });
+  };
+
+  const handleAssignEvaluators = (cycle: Cycle) => {
+    openDrawer({
+      title: `${cycle.name} - Asignar Evaluadores`,
+      size: 'medium',
+      children: <EvaluatorAssignmentModal cycle={cycle} onSuccess={closeDrawer} />,
       primaryButtonProps: { disabled: true },
       secondaryButtonProps: { children: 'Cerrar', onClick: () => closeDrawer() },
     });
@@ -179,6 +196,9 @@ export const GestionCiclosPage = () => {
                       <Stack sx={{ flexDirection: 'row', gap: 0.5 }}>
                         <Button variant="secondary" size="small" onClick={() => handleViewDetails(cycle)}>
                           Ver detalles
+                        </Button>
+                        <Button variant="secondary" size="small" onClick={() => handleAssignEvaluators(cycle)}>
+                          Asignar
                         </Button>
                         <IconButton onClick={e => handleOpenMenu(e, cycle)}>
                           <IconDotsVertical />

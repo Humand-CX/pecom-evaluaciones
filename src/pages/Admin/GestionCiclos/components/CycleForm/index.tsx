@@ -9,7 +9,8 @@ import FormControlLabel from '@material-hu/mui/FormControlLabel';
 import FormInputClassic from '@material-hu/components/design-system/Inputs/Classic/form';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 
-import { useDimensions } from '../../../../providers/DimensionsContext';
+import { useDimensions } from '../../../../../providers/DimensionsContext';
+import { useSegments } from '../../../../../providers/SegmentsContext';
 import { cycleSchema, type CycleFormValues } from '../../schema';
 
 type CycleFormProps = {
@@ -20,6 +21,7 @@ type CycleFormProps = {
 
 export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) => {
   const { dimensions } = useDimensions();
+  const { segments } = useSegments();
 
   const methods = useForm<CycleFormValues>({
     resolver: zodResolver(cycleSchema),
@@ -29,12 +31,14 @@ export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) =
       start_date: '',
       end_date: '',
       dimensionIds: [],
+      segmentIds: [],
       ...defaultValues,
     },
   });
 
   const { control, formState } = methods;
   const dimensionError = formState.errors.dimensionIds?.message;
+  const segmentError = formState.errors.segmentIds?.message;
 
   return (
     <FormProvider {...methods}>
@@ -61,7 +65,7 @@ export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) =
             rules={{}}
           />
 
-          <CardContainer padding={12}>
+          <CardContainer padding={16}>
             <Stack sx={{ gap: 1.5 }}>
               <Typography variant="subtitle2">Dimensiones*</Typography>
               <Controller
@@ -98,6 +102,48 @@ export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) =
               {dimensionError && (
                 <Typography variant="caption" sx={{ color: 'error.main' }}>
                   {dimensionError}
+                </Typography>
+              )}
+            </Stack>
+          </CardContainer>
+
+          <CardContainer padding={16}>
+            <Stack sx={{ gap: 1.5 }}>
+              <Typography variant="subtitle2">Segmentos de Personas*</Typography>
+              <Controller
+                name="segmentIds"
+                control={control}
+                render={({ field }) => (
+                  <Stack sx={{ gap: 1 }}>
+                    {segments.length === 0 ? (
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        No hay segmentos disponibles.
+                      </Typography>
+                    ) : (
+                      segments.map(segment => (
+                        <FormControlLabel
+                          key={segment.id}
+                          control={
+                            <Checkbox
+                              checked={field.value.includes(segment.id)}
+                              onChange={e => {
+                                const newValue = e.target.checked
+                                  ? [...field.value, segment.id]
+                                  : field.value.filter(id => id !== segment.id);
+                                field.onChange(newValue);
+                              }}
+                            />
+                          }
+                          label={segment.name}
+                        />
+                      ))
+                    )}
+                  </Stack>
+                )}
+              />
+              {segmentError && (
+                <Typography variant="caption" sx={{ color: 'error.main' }}>
+                  {segmentError}
                 </Typography>
               )}
             </Stack>

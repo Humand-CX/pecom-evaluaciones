@@ -8,4 +8,5 @@ export type Cycle = {
   end_date: string;
   status: CycleStatus;
   dimensionIds: string[];
+  segmentIds: string[];
 };

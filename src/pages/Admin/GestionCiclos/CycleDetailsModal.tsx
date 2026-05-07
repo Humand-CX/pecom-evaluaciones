@@ -14,6 +14,7 @@ import Pills from '@material-hu/components/design-system/Pills';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 
 import { useDimensions } from '../../../providers/DimensionsContext';
+import { useSegments } from '../../../providers/SegmentsContext';
 import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
 import { DIMENSIONS, MOCK_PEOPLE } from '../../Evaluador/MatrizEvaluacion/constants';
@@ -26,21 +27,29 @@ type CycleDetailsModalProps = {
 export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
   const theme = useTheme();
   const { dimensions } = useDimensions();
+  const { segments } = useSegments();
   const { assignments } = useEvaluatorAssignments();
 
   const allDimensions = dimensions.length > 0 ? dimensions : DIMENSIONS;
   const cycleDimensions = allDimensions.filter(d => cycle.dimensionIds.includes(d.id));
   const subDimensionCount = cycleDimensions.reduce((sum, d) => sum + d.subDimensions.length, 0);
 
+  // Get persons from selected segments
+  const cyclePersons = MOCK_PEOPLE.filter(person =>
+    segments
+      .filter(seg => cycle.segmentIds.includes(seg.id))
+      .some(seg => seg.personIds.includes(person.id))
+  );
+
   // Get all results for this cycle
   const cycleResults = MOCK_RESULTS.filter(r => r.cycleId === cycle.id);
 
   // Calculate completion stats
   const evaluationStats = useMemo(() => {
-    let totalExpected = MOCK_PEOPLE.length * subDimensionCount;
+    let totalExpected = cyclePersons.length * subDimensionCount;
     let totalCompleted = 0;
 
-    MOCK_PEOPLE.forEach(person => {
+    cyclePersons.forEach(person => {
       const result = cycleResults.find(r => r.personId === person.id);
       if (result) {
         const completedCount = Object.values(result.scores).filter(score => score != null).length;
@@ -50,10 +59,11 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
 
     const percentage = totalExpected > 0 ? Math.round((totalCompleted / totalExpected) * 100) : 0;
     return { totalCompleted, totalExpected, percentage };
-  }, [cycleResults, subDimensionCount]);
+  }, [cyclePersons, cycleResults, subDimensionCount]);
 
   // Build table data with evaluators and completion status
-  const tableData = MOCK_PEOPLE.map(person => {
+  const tableData = cyclePersons.map(person => {
+    const segment = segments.find(seg => seg.personIds.includes(person.id));
     const personAssignments = assignments.filter(
       a => a.cycleId === cycle.id && a.personId === person.id
     );
@@ -67,6 +77,7 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
 
     return {
       person,
+      segment: segment?.name || 'Sin segmento',
       evaluators: uniqueEvaluators.length > 0 ? uniqueEvaluators : ['Sin asignar'],
       isCompleted,
       completedScores,
@@ -76,7 +87,7 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
   return (
     <Stack sx={{ gap: 3 }}>
       {/* Progress Card */}
-      <CardContainer padding={12}>
+      <CardContainer padding={16}>
         <Stack sx={{ gap: 1 }}>
           <Typography variant="subtitle1">Progreso del Ciclo</Typography>
           <Stack sx={{ gap: 0.5 }}>
@@ -101,7 +112,7 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
       </CardContainer>
 
       {/* Dimensiones asociadas */}
-      <CardContainer padding={12}>
+      <CardContainer padding={16}>
         <Stack sx={{ gap: 1 }}>
           <Typography variant="subtitle2">Dimensiones ({cycleDimensions.length})</Typography>
           <Stack sx={{ gap: 0.5, flexWrap: 'wrap', flexDirection: 'row' }}>
@@ -120,6 +131,7 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
             <TableHead>
               <TableRow>
                 <TableCell headerCell>Persona</TableCell>
+                <TableCell headerCell>Segmento</TableCell>
                 <TableCell headerCell>Evaluadores Asignados</TableCell>
                 <TableCell headerCell>Estado</TableCell>
               </TableRow>
@@ -134,6 +146,9 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
                         {row.person.legajo}
                       </Typography>
                     </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="caption">{row.segment}</Typography>
                   </TableCell>
                   <TableCell>
                     <Stack sx={{ gap: 0.5 }}>
@@ -172,7 +187,7 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
 
       {/* Summary Stats */}
       {evaluationStats.totalExpected > 0 && (
-        <CardContainer padding={12}>
+        <CardContainer padding={16}>
           <Stack sx={{ gap: 1.5 }}>
             <Typography variant="subtitle2">Resumen</Typography>
             <Stack sx={{ gap: 0.5 }}>

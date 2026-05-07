@@ -17,6 +17,7 @@ export const MOCK_CYCLES: Cycle[] = [
     end_date: '2025-06-30',
     status: 'active',
     dimensionIds: ['disciplina', 'conocimiento', 'actitud'],
+    segmentIds: ['seg-gerentes', 'seg-operarios'],
   },
   {
     id: '2',
@@ -26,6 +27,7 @@ export const MOCK_CYCLES: Cycle[] = [
     end_date: '2025-07-31',
     status: 'active',
     dimensionIds: ['disciplina', 'conocimiento'],
+    segmentIds: ['seg-operarios'],
   },
   {
     id: '3',
@@ -35,5 +37,6 @@ export const MOCK_CYCLES: Cycle[] = [
     end_date: '2025-03-31',
     status: 'closed',
     dimensionIds: ['disciplina', 'actitud'],
+    segmentIds: ['seg-gerentes'],
   },
 ];

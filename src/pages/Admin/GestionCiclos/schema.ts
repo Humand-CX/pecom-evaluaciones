@@ -6,6 +6,7 @@ export const cycleSchema = z.object({
   start_date: z.string().min(1, 'Requerido'),
   end_date: z.string().min(1, 'Requerido'),
   dimensionIds: z.array(z.string()).min(1, 'Seleccioná al menos una dimensión'),
+  segmentIds: z.array(z.string()).min(1, 'Seleccioná al menos un segmento'),
 });
 
 export type CycleFormValues = z.infer<typeof cycleSchema>;

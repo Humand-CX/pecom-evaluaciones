@@ -13,6 +13,7 @@ import { HomePage } from './pages/Home';
 import { AuthProvider, useAuth } from './providers/AuthContext';
 import { DimensionsProvider } from './providers/DimensionsContext';
 import { EvaluatorAssignmentsProvider } from './providers/EvaluatorAssignmentsContext';
+import { SegmentsProvider } from './providers/SegmentsContext';
 import './i18n';
 
 const LoginPage = lazy(() => import('./pages/Auth/Login'));
@@ -37,73 +38,75 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
-        <MenuLayerProvider>
-          <DialogLayerProvider>
-            <DrawerLayerProvider>
-              <BrowserRouter>
-                <EvaluatorAssignmentsProvider>
-                  <DimensionsProvider>
+        <DimensionsProvider>
+          <SegmentsProvider>
+            <EvaluatorAssignmentsProvider>
+            <MenuLayerProvider>
+              <DialogLayerProvider>
+                <DrawerLayerProvider>
+                  <BrowserRouter>
                     <AuthProvider>
-                    <Suspense fallback={null}>
-                      <Routes>
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route
-                          path="/"
-                          element={
-                            <ProtectedRoute>
-                              <HomePage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/evaluador/ciclos"
-                          element={
-                            <ProtectedRoute>
-                              <CiclosActivosPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/evaluador/matriz/:cycleId"
-                          element={
-                            <ProtectedRoute>
-                              <MatrizEvaluacionPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/ciclos"
-                          element={
-                            <ProtectedRoute>
-                              <GestionCiclosPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/dimensiones"
-                          element={
-                            <ProtectedRoute>
-                              <DimensionesPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/resultados"
-                          element={
-                            <ProtectedRoute>
-                              <ResultadosPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                      </Routes>
-                    </Suspense>
+                      <Suspense fallback={null}>
+                        <Routes>
+                          <Route path="/login" element={<LoginPage />} />
+                          <Route
+                            path="/"
+                            element={
+                              <ProtectedRoute>
+                                <HomePage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/evaluador/ciclos"
+                            element={
+                              <ProtectedRoute>
+                                <CiclosActivosPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/evaluador/matriz/:cycleId"
+                            element={
+                              <ProtectedRoute>
+                                <MatrizEvaluacionPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/ciclos"
+                            element={
+                              <ProtectedRoute>
+                                <GestionCiclosPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/dimensiones"
+                            element={
+                              <ProtectedRoute>
+                                <DimensionesPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/admin/resultados"
+                            element={
+                              <ProtectedRoute>
+                                <ResultadosPage />
+                              </ProtectedRoute>
+                            }
+                          />
+                        </Routes>
+                      </Suspense>
                     </AuthProvider>
-                  </DimensionsProvider>
-                </EvaluatorAssignmentsProvider>
-              </BrowserRouter>
-            </DrawerLayerProvider>
-          </DialogLayerProvider>
-        </MenuLayerProvider>
+                  </BrowserRouter>
+                </DrawerLayerProvider>
+              </DialogLayerProvider>
+            </MenuLayerProvider>
+          </EvaluatorAssignmentsProvider>
+          </SegmentsProvider>
+        </DimensionsProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

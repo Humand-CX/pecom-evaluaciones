@@ -171,7 +171,7 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
       )}
 
       {preview.length > 0 && errors.length === 0 && (
-        <CardContainer padding={12}>
+        <CardContainer padding={16}>
           <Stack sx={{ gap: 1 }}>
             <Typography variant="subtitle2">Preview ({preview.length} filas)</Typography>
             {preview.slice(0, 3).map((row, idx) => (

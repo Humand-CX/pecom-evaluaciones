@@ -1,4 +1,5 @@
 import { type Dimension, type Person } from './types';
+import { type Segment } from '../../../types/segment';
 
 export const DIMENSIONS: Dimension[] = [
   {
@@ -45,4 +46,17 @@ export const MOCK_PEOPLE: Person[] = [
   { id: 'p3', name: 'Juan Pérez', legajo: '12347' },
   { id: 'p4', name: 'Ana Martínez', legajo: '12348' },
   { id: 'p5', name: 'Roberto Silva', legajo: '12349' },
+];
+
+export const MOCK_SEGMENTS: Segment[] = [
+  { id: 'seg-gerentes', name: 'Gerentes', personIds: ['p1', 'p2'] },
+  { id: 'seg-operarios', name: 'Operarios', personIds: ['p3', 'p4', 'p5'] },
+  { id: 'seg-rh', name: 'RH', personIds: ['p2'] },
+];
+
+export const MOCK_EVALUATORS = [
+  { id: 'eval-001', name: 'Luis Martínez' },
+  { id: 'eval-002', name: 'Sandra López' },
+  { id: 'eval-003', name: 'Diego Torres' },
+  { id: 'eval-004', name: 'Patricia Ruiz' },
 ];
