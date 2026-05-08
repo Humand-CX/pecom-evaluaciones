@@ -2,6 +2,10 @@ export type Person = {
   id: string;
   name: string;
   legajo: string;
+  proyecto?: string;
+  area?: string;
+  departamento?: string;
+  provincia?: string;
 };
 
 export type SubDimension = {

@@ -41,11 +41,11 @@ export const SCORE_LABELS: Record<number, string> = {
 };
 
 export const MOCK_PEOPLE: Person[] = [
-  { id: 'p1', name: 'Carlos Rodríguez', legajo: '12345' },
-  { id: 'p2', name: 'María González', legajo: '12346' },
-  { id: 'p3', name: 'Juan Pérez', legajo: '12347' },
-  { id: 'p4', name: 'Ana Martínez', legajo: '12348' },
-  { id: 'p5', name: 'Roberto Silva', legajo: '12349' },
+  { id: 'p1', name: 'Carlos Rodríguez', legajo: '12345', proyecto: 'LAJE', area: 'Operaciones', departamento: 'Mantenimiento', provincia: 'Buenos Aires' },
+  { id: 'p2', name: 'María González', legajo: '12346', proyecto: 'HUB NORTE', area: 'Recursos Humanos', departamento: 'Selección', provincia: 'Córdoba' },
+  { id: 'p3', name: 'Juan Pérez', legajo: '12347', proyecto: 'LAJE', area: 'Operaciones', departamento: 'Producción', provincia: 'Santa Fe' },
+  { id: 'p4', name: 'Ana Martínez', legajo: '12348', proyecto: 'CHIVILCOY', area: 'Seguridad', departamento: 'HSE', provincia: 'Buenos Aires' },
+  { id: 'p5', name: 'Roberto Silva', legajo: '12349', proyecto: 'HUB NORTE', area: 'Operaciones', departamento: 'Logística', provincia: 'Mendoza' },
 ];
 
 export const MOCK_SEGMENTS: Segment[] = [
