@@ -114,7 +114,7 @@ export default function MatrizEvaluacionPage() {
 
         {activeD.map(dim =>
           dim.subDimensions.map(sd => (
-            <CardContainer key={sd.id} padding={16}>
+            <CardContainer key={sd.id} padding={16} sx={{ width: '100%' }}>
               <Stack sx={{ gap: 2 }}>
                 <Stack sx={{ gap: 0.5 }}>
                   <Typography
