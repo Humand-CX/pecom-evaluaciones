@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
 
-import { IconAlertTriangle, IconDownload } from '@material-hu/icons/tabler';
+import { IconAlertTriangle, IconDownload, IconChartBar, IconList, IconAlertCircle } from '@material-hu/icons/tabler';
 import Stack from '@material-hu/mui/Stack';
+import Tab from '@material-hu/mui/Tab';
+import Tabs from '@material-hu/mui/Tabs';
+import Box from '@material-hu/mui/Box';
 import { useTheme } from '@material-hu/mui/styles';
 import Typography from '@material-hu/mui/Typography';
 
@@ -31,6 +34,30 @@ const getScoreStyle = (score: number | undefined, theme: Theme) => {
   return { ...base, color: theme.palette.success.dark };
 };
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ pt: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
 export const ResultadosPage = () => {
   const theme = useTheme();
   const { dimensions } = useDimensions();
@@ -41,6 +68,7 @@ export const ResultadosPage = () => {
   );
 
   const [selectedCycleId, setSelectedCycleId] = useState(cyclesWithResults[0]?.id ?? '');
+  const [activeTab, setActiveTab] = useState(0);
 
   const selectedCycle = MOCK_CYCLES.find(c => c.id === selectedCycleId);
 
@@ -66,6 +94,14 @@ export const ResultadosPage = () => {
       })
       .filter(n => n.person && n.subDim);
   }, [selectedResults]);
+
+  const completedCount = useMemo(() => {
+    return selectedResults.filter(r =>
+      Object.values(r.scores).some(score => score !== undefined)
+    ).length;
+  }, [selectedResults]);
+
+  const totalExpected = MOCK_PEOPLE.length;
 
   const handleExportCSV = () => {
     const headers = ['Nombre', 'Legajo', ...SUB_DIMENSIONS.map(sd => sd.name)];
@@ -114,25 +150,160 @@ export const ResultadosPage = () => {
               key={cycle.id}
               variant={selectedCycleId === cycle.id ? 'primary' : 'secondary'}
               size="small"
-              onClick={() => setSelectedCycleId(cycle.id)}
+              onClick={() => {
+                setSelectedCycleId(cycle.id);
+                setActiveTab(0);
+              }}
             >
               {cycle.name}
             </Button>
           ))}
         </Stack>
 
-        <TableContainer sx={{ overflowX: 'auto' }}>
-          <Table sx={{ tableLayout: 'fixed', minWidth: 1200 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={activeTab}
+            onChange={(event, newValue) => setActiveTab(newValue)}
+            aria-label="resultados tabs"
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontSize: 14,
+                fontWeight: 500,
+                gap: 1,
+              },
+            }}
+          >
+            <Tab label="Dashboard" icon={<IconChartBar size={18} />} iconPosition="start" />
+            <Tab label="Detalles" icon={<IconList size={18} />} iconPosition="start" />
+            <Tab label="Alertas" icon={<IconAlertCircle size={18} />} iconPosition="start" />
+          </Tabs>
+        </Box>
+
+        {/* TAB 1: Dashboard */}
+        <TabPanel value={activeTab} index={0}>
+          <Stack sx={{ gap: 3 }}>
+            <Stack sx={{ flexDirection: 'row', gap: 2, flexWrap: 'wrap' }}>
+              <CardContainer sx={{ flex: 1, minWidth: 200 }} padding={16} noHover>
+                <Stack sx={{ gap: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Evaluaciones completadas
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {completedCount}/{totalExpected}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {Math.round((completedCount / totalExpected) * 100)}% del progreso
+                  </Typography>
+                </Stack>
+              </CardContainer>
+
+              <CardContainer sx={{ flex: 1, minWidth: 200 }} padding={16} noHover>
+                <Stack sx={{ gap: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Puntajes Nocivo (1)
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: 'error.main' }}>
+                    {nocivos.length}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Requieren atención inmediata
+                  </Typography>
+                </Stack>
+              </CardContainer>
+
+              <CardContainer sx={{ flex: 1, minWidth: 200 }} padding={16} noHover>
+                <Stack sx={{ gap: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Dimensiones evaluadas
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {activeD.length}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Sub-dimensiones: {SUB_DIMENSIONS.length}
+                  </Typography>
+                </Stack>
+              </CardContainer>
+            </Stack>
+
+            <CardContainer sx={{ width: '100%' }} padding={16} noHover>
+              <Stack sx={{ gap: 2 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                  Desglose por Dimensión
+                </Typography>
+                <Stack sx={{ gap: 1 }}>
+                  {activeD.map(dim => {
+                    const subCount = dim.subDimensions.length;
+                    const avgScore = selectedResults.length > 0
+                      ? selectedResults.reduce((sum, r) => {
+                        const dimScores = dim.subDimensions.map(sd => r.scores[sd.id] ?? 0).filter(s => s > 0);
+                        return sum + (dimScores.length > 0 ? dimScores.reduce((a, b) => a + b) / dimScores.length : 0);
+                      }, 0) / selectedResults.length
+                      : 0;
+
+                    return (
+                      <Stack key={dim.id} sx={{ gap: 0.5 }}>
+                        <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {dim.name}
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                            {avgScore.toFixed(1)}
+                          </Typography>
+                        </Stack>
+                        <Box
+                          sx={{
+                            height: 8,
+                            bgcolor: 'action.disabled',
+                            borderRadius: 1,
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              height: '100%',
+                              bgcolor: avgScore >= 3 ? 'success.main' : avgScore >= 2 ? 'warning.main' : 'error.main',
+                              width: `${(avgScore / 5) * 100}%`,
+                              transition: 'width 0.3s ease',
+                            }}
+                          />
+                        </Box>
+                      </Stack>
+                    );
+                  })}
+                </Stack>
+              </Stack>
+            </CardContainer>
+          </Stack>
+        </TabPanel>
+
+        {/* TAB 2: Detalles (Tabla) */}
+        <TabPanel value={activeTab} index={1}>
+          <TableContainer sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+          <Table sx={{
+            tableLayout: 'auto',
+            minWidth: 'auto',
+            width: '100%',
+          }}>
             <colgroup>
-              <col style={{ width: 140 }} />
+              <col style={{ width: 160 }} />
               {SUB_DIMENSIONS.map(sd => (
-                <col key={sd.id} style={{ width: 52 }} />
+                <col key={sd.id} style={{ width: 60 }} />
               ))}
             </colgroup>
             <TableHead>
               <TableRow>
-                <TableCell headerCell rowSpan={2} sx={{ verticalAlign: 'middle' }}>
-                  Nombre / Legajo
+                <TableCell
+                  headerCell
+                  rowSpan={2}
+                  sx={{
+                    verticalAlign: 'middle',
+                    minWidth: 160,
+                    fontWeight: 700,
+                  }}
+                >
+                  Persona
                 </TableCell>
                 {activeD.map(dim => (
                   <TableCell
@@ -141,13 +312,14 @@ export const ResultadosPage = () => {
                     colSpan={dim.subDimensions.length}
                     sx={{
                       textAlign: 'center',
-                      borderBottom: 0,
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis',
-                      fontSize: 11,
-                      px: 0.5,
+                      borderBottom: 1,
+                      borderColor: 'divider',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      px: 1,
+                      py: 1,
                     }}
+                    title={dim.name}
                   >
                     {dim.name}
                   </TableCell>
@@ -158,7 +330,13 @@ export const ResultadosPage = () => {
                   <TableCell
                     key={sd.id}
                     headerCell
-                    sx={{ textAlign: 'center', verticalAlign: 'bottom', pb: 1, px: 0, overflow: 'hidden' }}
+                    sx={{
+                      textAlign: 'center',
+                      verticalAlign: 'middle',
+                      pb: 1,
+                      px: 0.5,
+                      minHeight: 140,
+                    }}
                   >
                     <Typography
                       variant="caption"
@@ -167,12 +345,13 @@ export const ResultadosPage = () => {
                         writingMode: 'vertical-rl',
                         transform: 'rotate(180deg)',
                         whiteSpace: 'nowrap',
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: 600,
-                        lineHeight: 1.2,
-                        height: 160,
+                        lineHeight: 1.3,
                         overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
+                      title={sd.name}
                     >
                       {sd.name}
                     </Typography>
@@ -185,15 +364,30 @@ export const ResultadosPage = () => {
                 const result = selectedResults.find(r => r.personId === person.id);
                 return (
                   <TableRow key={person.id}>
-                    <TableCell sx={{ overflow: 'hidden' }}>
-                      <Stack>
+                    <TableCell sx={{ verticalAlign: 'top', minWidth: 160 }}>
+                      <Stack sx={{ gap: 0.25 }}>
                         <Typography
                           variant="body2"
-                          sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          sx={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontWeight: 500,
+                          }}
+                          title={person.name}
                         >
                           {person.name}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'text.secondary',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                          title={person.legajo}
+                        >
                           {person.legajo}
                         </Typography>
                       </Stack>
@@ -201,13 +395,15 @@ export const ResultadosPage = () => {
                     {SUB_DIMENSIONS.map(sd => {
                       const score = result?.scores[sd.id];
                       return (
-                        <TableCell key={sd.id} sx={{ textAlign: 'center', px: 0 }}>
+                        <TableCell key={sd.id} sx={{ textAlign: 'center', px: 0.5, minWidth: 60 }}>
                           {score != null ? (
                             <Typography variant="body2" sx={getScoreStyle(score, theme)}>
                               {score}
                             </Typography>
                           ) : (
-                            '—'
+                            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                              —
+                            </Typography>
                           )}
                         </TableCell>
                       );
@@ -218,21 +414,30 @@ export const ResultadosPage = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        </TabPanel>
 
-        <CardContainer sx={{ width: '100%' }} padding={16} noHover>
+        {/* TAB 3: Alertas Nocivo */}
+        <TabPanel value={activeTab} index={2}>
+        <CardContainer sx={{ width: '100%', bgcolor: nocivos.length > 0 ? 'error.light' : 'success.light' }} padding={16} noHover>
           <Stack sx={{ gap: 2 }}>
             <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
               <IconAlertTriangle size={20} color={theme.palette.error.main} />
-              <Typography variant="subtitle1">Alertas Nocivo</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                Alertas - Puntajes Nocivo
+              </Typography>
               {nocivos.length > 0 && (
                 <Typography
-                  variant="caption"
+                  variant="body2"
                   sx={{
-                    bgcolor: theme.palette.error.light,
-                    color: theme.palette.error.dark,
-                    borderRadius: '4px',
-                    px: 1,
+                    bgcolor: theme.palette.error.main,
+                    color: 'error.light',
+                    borderRadius: '12px',
+                    px: 1.5,
+                    py: 0.5,
                     fontWeight: 700,
+                    minWidth: 28,
+                    textAlign: 'center',
+                    ml: 'auto',
                   }}
                 >
                   {nocivos.length}
@@ -241,20 +446,47 @@ export const ResultadosPage = () => {
             </Stack>
 
             {nocivos.length === 0 ? (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                No hay puntajes Nocivo en este ciclo.
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                ✓ No hay puntajes Nocivo en este ciclo.
               </Typography>
             ) : (
-              <Stack sx={{ gap: 0.5 }}>
+              <Stack sx={{ gap: 1 }}>
                 {nocivos.map((n, idx) => (
-                  <Typography key={idx} variant="body2">
-                    {n.person?.name} – {n.subDim?.name}
-                  </Typography>
+                  <Stack
+                    key={idx}
+                    sx={{
+                      flexDirection: 'row',
+                      gap: 1.5,
+                      p: 1,
+                      bgcolor: 'background.paper',
+                      borderLeft: '4px solid',
+                      borderColor: 'error.main',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    <Stack sx={{ flex: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {n.person?.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {n.person?.legajo}
+                      </Typography>
+                    </Stack>
+                    <Stack sx={{ flex: 1 }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        Dimensión
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {n.subDim?.name}
+                      </Typography>
+                    </Stack>
+                  </Stack>
                 ))}
               </Stack>
             )}
           </Stack>
         </CardContainer>
+        </TabPanel>
       </Stack>
     </DashboardLayout>
   );
