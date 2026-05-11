@@ -1,9 +1,13 @@
 import { useMemo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+// @ts-ignore - xlsx package
 import * as XLSX from 'xlsx';
 
-import { IconAlertTriangle, IconDownload } from '@material-hu/icons/tabler';
+import { IconAlertTriangle, IconDownload, IconChartBar, IconList, IconAlertCircle } from '@material-hu/icons/tabler';
 import Stack from '@material-hu/mui/Stack';
+import Tab from '@material-hu/mui/Tab';
+import Tabs from '@material-hu/mui/Tabs';
+import Box from '@material-hu/mui/Box';
 import { useTheme } from '@material-hu/mui/styles';
 import Typography from '@material-hu/mui/Typography';
 
@@ -49,6 +53,21 @@ type FilterValues = {
 const toOptions = (values: (string | undefined)[]) =>
   Array.from(new Set(values.filter(Boolean) as string[])).sort().map(v => ({ value: v, label: v }));
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div role="tabpanel" hidden={value !== index} {...other}>
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
 export const ResultadosPage = () => {
   const theme = useTheme();
   const { dimensions } = useDimensions();
@@ -56,6 +75,7 @@ export const ResultadosPage = () => {
 
   const cyclesWithResults = MOCK_CYCLES.filter(c => MOCK_RESULTS.some(r => r.cycleId === c.id));
   const [selectedCycleId, setSelectedCycleId] = useState(cyclesWithResults[0]?.id ?? '');
+  const [activeTab, setActiveTab] = useState(0);
 
   const selectedCycle = MOCK_CYCLES.find(c => c.id === selectedCycleId);
   const activeD =
@@ -155,6 +175,13 @@ export const ResultadosPage = () => {
     filters.provincia,
   ].filter(Boolean).length;
 
+  const completedCount = useMemo(() => {
+    return filteredPeople.filter(p => {
+      const result = selectedResults.find(r => r.personId === p.id);
+      return result && Object.values(result.scores).some(score => score !== undefined);
+    }).length;
+  }, [filteredPeople, selectedResults]);
+
   return (
     <DashboardLayout>
       <Stack sx={{ gap: 3 }}>
@@ -181,13 +208,137 @@ export const ResultadosPage = () => {
               key={cycle.id}
               variant={selectedCycleId === cycle.id ? 'primary' : 'secondary'}
               size="small"
-              onClick={() => setSelectedCycleId(cycle.id)}
+              onClick={() => {
+                setSelectedCycleId(cycle.id);
+                setActiveTab(0);
+              }}
             >
               {cycle.name}
             </Button>
           ))}
         </Stack>
 
+        {/* Tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={activeTab}
+            onChange={(event, newValue) => setActiveTab(newValue)}
+            aria-label="resultados tabs"
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontSize: 14,
+                fontWeight: 500,
+                gap: 1,
+              },
+            }}
+          >
+            <Tab label="Dashboard" icon={<IconChartBar size={18} />} iconPosition="start" />
+            <Tab label="Detalles" icon={<IconList size={18} />} iconPosition="start" />
+            <Tab label="Alertas" icon={<IconAlertCircle size={18} />} iconPosition="start" />
+          </Tabs>
+        </Box>
+
+        {/* TAB 1: Dashboard */}
+        <TabPanel value={activeTab} index={0}>
+          <Stack sx={{ gap: 3 }}>
+            <Stack sx={{ flexDirection: 'row', gap: 2, flexWrap: 'wrap' }}>
+              <CardContainer sx={{ flex: 1, minWidth: 200 }} padding={16} noHover>
+                <Stack sx={{ gap: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Evaluaciones completadas
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {completedCount}/{filteredPeople.length}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {filteredPeople.length > 0 ? Math.round((completedCount / filteredPeople.length) * 100) : 0}% del progreso
+                  </Typography>
+                </Stack>
+              </CardContainer>
+
+              <CardContainer sx={{ flex: 1, minWidth: 200 }} padding={16} noHover>
+                <Stack sx={{ gap: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Puntajes Nocivo (1)
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: 'error.main' }}>
+                    {nocivos.length}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Requieren atención inmediata
+                  </Typography>
+                </Stack>
+              </CardContainer>
+
+              <CardContainer sx={{ flex: 1, minWidth: 200 }} padding={16} noHover>
+                <Stack sx={{ gap: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Dimensiones evaluadas
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {activeD.length}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Sub-dimensiones: {SUB_DIMENSIONS.length}
+                  </Typography>
+                </Stack>
+              </CardContainer>
+            </Stack>
+
+            <CardContainer sx={{ width: '100%' }} padding={16} noHover>
+              <Stack sx={{ gap: 2 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                  Desglose por Dimensión
+                </Typography>
+                <Stack sx={{ gap: 1 }}>
+                  {activeD.map(dim => {
+                    const avgScore = filteredPeople.length > 0
+                      ? filteredPeople.reduce((sum, p) => {
+                        const result = selectedResults.find(r => r.personId === p.id);
+                        const dimScores = dim.subDimensions.map(sd => result?.scores[sd.id] ?? 0).filter(s => s > 0);
+                        return sum + (dimScores.length > 0 ? dimScores.reduce((a, b) => a + b) / dimScores.length : 0);
+                      }, 0) / filteredPeople.length
+                      : 0;
+
+                    return (
+                      <Stack key={dim.id} sx={{ gap: 0.5 }}>
+                        <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {dim.name}
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                            {avgScore.toFixed(1)}/5
+                          </Typography>
+                        </Stack>
+                        <Box
+                          sx={{
+                            height: 8,
+                            bgcolor: 'action.disabled',
+                            borderRadius: 1,
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              height: '100%',
+                              bgcolor: avgScore >= 3 ? 'success.main' : avgScore >= 2 ? 'warning.main' : 'error.main',
+                              width: `${(avgScore / 5) * 100}%`,
+                              transition: 'width 0.3s ease',
+                            }}
+                          />
+                        </Box>
+                      </Stack>
+                    );
+                  })}
+                </Stack>
+              </Stack>
+            </CardContainer>
+          </Stack>
+        </TabPanel>
+
+        {/* TAB 2: Detalles (Filtros + Tabla) */}
+        <TabPanel value={activeTab} index={1}>
         {/* Filtros */}
         <FormProvider {...methods}>
           <CardContainer padding={16} noHover sx={{ width: '100%' }}>
@@ -349,37 +500,79 @@ export const ResultadosPage = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        </TabPanel>
 
-        {/* Alertas nocivo */}
-        <CardContainer sx={{ width: '100%' }} padding={16} noHover>
+        {/* TAB 3: Alertas Nocivo */}
+        <TabPanel value={activeTab} index={2}>
+        <CardContainer sx={{ width: '100%', bgcolor: nocivos.length > 0 ? 'error.light' : 'success.light' }} padding={16} noHover>
           <Stack sx={{ gap: 2 }}>
             <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
               <IconAlertTriangle size={20} color={theme.palette.error.main} />
-              <Typography variant="subtitle1">Alertas Nocivo</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                Alertas - Puntajes Nocivo
+              </Typography>
               {nocivos.length > 0 && (
                 <Typography
-                  variant="caption"
-                  sx={{ bgcolor: theme.palette.error.light, color: theme.palette.error.dark, borderRadius: '4px', px: 1, fontWeight: 700 }}
+                  variant="body2"
+                  sx={{
+                    bgcolor: theme.palette.error.main,
+                    color: 'error.light',
+                    borderRadius: '12px',
+                    px: 1.5,
+                    py: 0.5,
+                    fontWeight: 700,
+                    minWidth: 28,
+                    textAlign: 'center',
+                    ml: 'auto',
+                  }}
                 >
                   {nocivos.length}
                 </Typography>
               )}
             </Stack>
+
             {nocivos.length === 0 ? (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                No hay puntajes Nocivo en este ciclo.
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                ✓ No hay puntajes Nocivo en este ciclo.
               </Typography>
             ) : (
-              <Stack sx={{ gap: 0.5 }}>
+              <Stack sx={{ gap: 1 }}>
                 {nocivos.map((n, idx) => (
-                  <Typography key={idx} variant="body2">
-                    {n.person?.name} – {n.subDim?.name}
-                  </Typography>
+                  <Stack
+                    key={idx}
+                    sx={{
+                      flexDirection: 'row',
+                      gap: 1.5,
+                      p: 1,
+                      bgcolor: 'background.paper',
+                      borderLeft: '4px solid',
+                      borderColor: 'error.main',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    <Stack sx={{ flex: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {n.person?.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {n.person?.legajo}
+                      </Typography>
+                    </Stack>
+                    <Stack sx={{ flex: 1 }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        Dimensión
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {n.subDim?.name}
+                      </Typography>
+                    </Stack>
+                  </Stack>
                 ))}
               </Stack>
             )}
           </Stack>
         </CardContainer>
+        </TabPanel>
       </Stack>
     </DashboardLayout>
   );
