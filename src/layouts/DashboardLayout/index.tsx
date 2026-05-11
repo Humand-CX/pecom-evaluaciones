@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 
 import {
   IconClipboardList,
-  IconHome,
   IconRuler,
   IconSettings,
   IconChartBar,
@@ -27,7 +26,6 @@ const SECTIONS: NavSectionProps[] = [
     key: 'main',
     title: 'Main',
     items: [
-      { key: 'home', title: 'Home', path: '/', icon: <IconHome /> },
       {
         key: 'ciclos',
         title: 'Mis evaluaciones',

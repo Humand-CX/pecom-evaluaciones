@@ -9,7 +9,6 @@ import { DialogLayerProvider } from '@material-hu/components/layers/Dialogs';
 import { DrawerLayerProvider } from '@material-hu/components/layers/Drawers';
 import { MenuLayerProvider } from '@material-hu/components/layers/Menus';
 
-import { HomePage } from './pages/Home';
 import { AuthProvider, useAuth } from './providers/AuthContext';
 import { DimensionsProvider } from './providers/DimensionsContext';
 import { EvaluatorAssignmentsProvider } from './providers/EvaluatorAssignmentsContext';
@@ -49,14 +48,7 @@ const App = () => {
                       <Suspense fallback={null}>
                         <Routes>
                           <Route path="/login" element={<LoginPage />} />
-                          <Route
-                            path="/"
-                            element={
-                              <ProtectedRoute>
-                                <HomePage />
-                              </ProtectedRoute>
-                            }
-                          />
+                          <Route path="/" element={<Navigate to="/evaluador/ciclos" replace />} />
                           <Route
                             path="/evaluador/ciclos"
                             element={
