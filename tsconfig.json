@@ -20,6 +20,7 @@
     "jsx": "react-jsx",
     "types": ["vite/client"],
     "paths": {
+      "@/*": ["src/*"],
       "@material-hu/components/*": ["node_modules/material-hu/lib/components/*"],
       "@material-hu/mui/x-date-pickers/*": ["node_modules/@mui/x-date-pickers/*"],
       "@material-hu/mui/x-date-pickers": ["node_modules/@mui/x-date-pickers"],

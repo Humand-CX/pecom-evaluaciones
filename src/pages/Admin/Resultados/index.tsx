@@ -233,7 +233,7 @@ export const ResultadosPage = () => {
             >
               {cycle.name}
             </Button>
-          ))}
+          )) : null}
         </Stack>
 
         {/* Tabs */}
