@@ -11,6 +11,7 @@ export type Person = {
 export type SubDimension = {
   id: string;
   name: string;
+  description?: string;
 };
 
 export type Dimension = {

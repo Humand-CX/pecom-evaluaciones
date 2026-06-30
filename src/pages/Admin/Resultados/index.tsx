@@ -11,6 +11,9 @@ import Box from '@material-hu/mui/Box';
 import { useTheme } from '@material-hu/mui/styles';
 import Typography from '@material-hu/mui/Typography';
 
+import { useUser } from '../../../providers/UserContext';
+import { useFilteredResults } from '../../../hooks/useFilteredResults';
+
 import Button from '@material-hu/components/design-system/Buttons/Button';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 import FormInputClassic from '@material-hu/components/design-system/Inputs/Classic/form';
@@ -71,9 +74,24 @@ function TabPanel(props: TabPanelProps) {
 export const ResultadosPage = () => {
   const theme = useTheme();
   const { dimensions } = useDimensions();
+  const { isAdmin, isEvaluator } = useUser();
+  const { canViewAllResults } = useFilteredResults();
   const allDimensions = dimensions.length > 0 ? dimensions : DIMENSIONS;
 
-  const cyclesWithResults = MOCK_CYCLES.filter(c => MOCK_RESULTS.some(r => r.cycleId === c.id));
+  // Filtrar ciclos según el rol
+  const cyclesWithResults = useMemo(() => {
+    const all = MOCK_CYCLES.filter(c => MOCK_RESULTS.some(r => r.cycleId === c.id));
+
+    // Admin ve todos
+    if (canViewAllResults) return all;
+
+    // Evaluador ve todos (cuando conectemos Humand, filtraremos por asignaciones)
+    if (isEvaluator) return all;
+
+    // Otros no ven
+    return [];
+  }, [canViewAllResults, isEvaluator]);
+
   const [selectedCycleId, setSelectedCycleId] = useState(cyclesWithResults[0]?.id ?? '');
   const [activeTab, setActiveTab] = useState(0);
 
@@ -203,7 +221,7 @@ export const ResultadosPage = () => {
 
         {/* Selector de ciclo */}
         <Stack sx={{ flexDirection: 'row', gap: 1, flexWrap: 'wrap' }}>
-          {cyclesWithResults.map(cycle => (
+          {cyclesWithResults && cyclesWithResults.length > 0 ? cyclesWithResults.map(cycle => (
             <Button
               key={cycle.id}
               variant={selectedCycleId === cycle.id ? 'primary' : 'secondary'}
@@ -242,8 +260,8 @@ export const ResultadosPage = () => {
         {/* TAB 1: Dashboard */}
         <TabPanel value={activeTab} index={0}>
           <Stack sx={{ gap: 3 }}>
-            <Stack sx={{ flexDirection: 'row', gap: 2, flexWrap: 'wrap' }}>
-              <CardContainer sx={{ flex: 1, minWidth: 200 }} padding={16} noHover>
+            <Stack sx={{ flexDirection: { xs: 'column', md: 'row' }, gap: 2, flexWrap: 'wrap' }}>
+              <CardContainer sx={{ flex: { xs: '1 1 100%', md: 1 }, minWidth: { xs: '100%', md: 200 } }} padding={16} noHover>
                 <Stack sx={{ gap: 1 }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                     Evaluaciones completadas
@@ -257,7 +275,7 @@ export const ResultadosPage = () => {
                 </Stack>
               </CardContainer>
 
-              <CardContainer sx={{ flex: 1, minWidth: 200 }} padding={16} noHover>
+              <CardContainer sx={{ flex: { xs: '1 1 100%', md: 1 }, minWidth: { xs: '100%', md: 200 } }} padding={16} noHover>
                 <Stack sx={{ gap: 1 }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                     Puntajes Nocivo (1)
@@ -271,7 +289,7 @@ export const ResultadosPage = () => {
                 </Stack>
               </CardContainer>
 
-              <CardContainer sx={{ flex: 1, minWidth: 200 }} padding={16} noHover>
+              <CardContainer sx={{ flex: { xs: '1 1 100%', md: 1 }, minWidth: { xs: '100%', md: 200 } }} padding={16} noHover>
                 <Stack sx={{ gap: 1 }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                     Dimensiones evaluadas
@@ -357,15 +375,19 @@ export const ResultadosPage = () => {
                   </Button>
                 )}
               </Stack>
-              <Stack sx={{ flexDirection: 'row', gap: 2, flexWrap: 'wrap' }}>
-                <Stack sx={{ flex: '1 1 200px', minWidth: 180 }}>
+              <Stack sx={{
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 2,
+                flexWrap: 'wrap'
+              }}>
+                <Stack sx={{ flex: { xs: '1 1 100%', sm: '1 1 200px' }, minWidth: { xs: '100%', sm: 180 } }}>
                   <FormInputClassic
                     name="buscarPersona"
                     inputProps={{ label: 'Buscar persona', placeholder: 'Nombre o legajo', hasCounter: false }}
                     rules={{}}
                   />
                 </Stack>
-                <Stack sx={{ flex: '1 1 180px', minWidth: 160 }}>
+                <Stack sx={{ flex: { xs: '1 1 100%', sm: '1 1 180px' }, minWidth: { xs: '100%', sm: 160 } }}>
                   <FormAutocomplete
                     name="evaluador"
                     autocompleteProps={{ label: 'Evaluador' }}
@@ -373,7 +395,7 @@ export const ResultadosPage = () => {
                     rules={{}}
                   />
                 </Stack>
-                <Stack sx={{ flex: '1 1 160px', minWidth: 140 }}>
+                <Stack sx={{ flex: { xs: '1 1 100%', sm: '1 1 160px' }, minWidth: { xs: '100%', sm: 140 } }}>
                   <FormAutocomplete
                     name="proyecto"
                     autocompleteProps={{ label: 'Proyecto' }}
@@ -381,7 +403,7 @@ export const ResultadosPage = () => {
                     rules={{}}
                   />
                 </Stack>
-                <Stack sx={{ flex: '1 1 160px', minWidth: 140 }}>
+                <Stack sx={{ flex: { xs: '1 1 100%', sm: '1 1 160px' }, minWidth: { xs: '100%', sm: 140 } }}>
                   <FormAutocomplete
                     name="area"
                     autocompleteProps={{ label: 'Área' }}
@@ -389,7 +411,7 @@ export const ResultadosPage = () => {
                     rules={{}}
                   />
                 </Stack>
-                <Stack sx={{ flex: '1 1 160px', minWidth: 140 }}>
+                <Stack sx={{ flex: { xs: '1 1 100%', sm: '1 1 160px' }, minWidth: { xs: '100%', sm: 140 } }}>
                   <FormAutocomplete
                     name="departamento"
                     autocompleteProps={{ label: 'Departamento' }}
@@ -397,7 +419,7 @@ export const ResultadosPage = () => {
                     rules={{}}
                   />
                 </Stack>
-                <Stack sx={{ flex: '1 1 160px', minWidth: 140 }}>
+                <Stack sx={{ flex: { xs: '1 1 100%', sm: '1 1 160px' }, minWidth: { xs: '100%', sm: 140 } }}>
                   <FormAutocomplete
                     name="provincia"
                     autocompleteProps={{ label: 'Provincia' }}

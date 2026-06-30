@@ -6,26 +6,58 @@ export const DIMENSIONS: Dimension[] = [
     id: 'disciplina',
     name: 'Disciplina Operacional',
     subDimensions: [
-      { id: 'seguridad', name: 'Compromiso con la Seguridad' },
-      { id: 'peligros', name: 'Identificación de Peligros y Control de Riesgos' },
-      { id: 'cultura', name: 'Cultura Segura' },
+      {
+        id: 'seguridad',
+        name: 'Compromiso con la Seguridad',
+        description: 'Capacidad de demostrar compromiso genuino con la seguridad en todas las actividades. Evalúa el cumplimiento de normas de seguridad y el uso de equipos de protección.'
+      },
+      {
+        id: 'peligros',
+        name: 'Identificación de Peligros y Control de Riesgos',
+        description: 'Habilidad para identificar peligros potenciales y tomar acciones preventivas. Evalúa la proactividad en la detección de riesgos y la propuesta de medidas de control.'
+      },
+      {
+        id: 'cultura',
+        name: 'Cultura Segura',
+        description: 'Contribución a la construcción de una cultura de seguridad en el equipo y la organización. Evalúa la promoción de prácticas seguras entre colegas.'
+      },
     ],
   },
   {
     id: 'conocimiento',
     name: 'Conocimiento Técnico',
     subDimensions: [
-      { id: 'conocimiento-aplicacion', name: 'Conocimiento y aplicación' },
-      { id: 'herramientas', name: 'Manejo de herramientas y equipos' },
+      {
+        id: 'conocimiento-aplicacion',
+        name: 'Conocimiento y aplicación',
+        description: 'Dominio de los conocimientos técnicos requeridos para el rol y su aplicación práctica en el desempeño de funciones. Evalúa la actualización y profundidad del conocimiento.'
+      },
+      {
+        id: 'herramientas',
+        name: 'Manejo de herramientas y equipos',
+        description: 'Competencia en el uso correcto y eficiente de herramientas y equipos necesarios para el trabajo. Evalúa el dominio operativo de los sistemas.'
+      },
     ],
   },
   {
     id: 'actitud',
     name: 'Actitud',
     subDimensions: [
-      { id: 'responsabilidad', name: 'Responsabilidad y Compromiso' },
-      { id: 'colaboracion', name: 'Colaboración y respeto interpersonal' },
-      { id: 'proactividad', name: 'Proactividad y orientación a la mejora' },
+      {
+        id: 'responsabilidad',
+        name: 'Responsabilidad y Compromiso',
+        description: 'Capacidad de asumir responsabilidades y cumplir con compromisos adquiridos. Evalúa la puntualidad, dedicación y cumplimiento de objetivos.'
+      },
+      {
+        id: 'colaboracion',
+        name: 'Colaboración y respeto interpersonal',
+        description: 'Disposición a trabajar en equipo y el respeto hacia los demás. Evalúa la comunicación efectiva, empatía y apoyo a colegas.'
+      },
+      {
+        id: 'proactividad',
+        name: 'Proactividad y orientación a la mejora',
+        description: 'Iniciativa para mejorar procesos y buscar soluciones innovadoras. Evalúa la capacidad de anticiparse a problemas y proponer mejoras continuas.'
+      },
     ],
   },
 ];
