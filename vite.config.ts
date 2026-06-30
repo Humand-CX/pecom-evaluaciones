@@ -12,6 +12,16 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      external: ['xlsx'],
+      output: {
+        globals: {
+          xlsx: 'XLSX',
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@material-hu/mui/lab': getNodeModule('@mui/lab'),

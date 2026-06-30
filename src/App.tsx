@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from './providers/AuthContext';
 import { DimensionsProvider } from './providers/DimensionsContext';
 import { EvaluatorAssignmentsProvider } from './providers/EvaluatorAssignmentsContext';
 import { SegmentsProvider } from './providers/SegmentsContext';
+import { UserProvider, useUser } from './providers/UserContext';
 import './i18n';
 
 const LoginPage = lazy(() => import('./pages/Auth/Login'));
@@ -33,18 +34,29 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function ProtectedAdminRoute({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  const { isAdmin } = useUser();
+  if (import.meta.env.DEV) return <>{children}</>;
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/evaluador/ciclos" replace />;
+  return <>{children}</>;
+}
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
-        <DimensionsProvider>
-          <SegmentsProvider>
-            <EvaluatorAssignmentsProvider>
-            <MenuLayerProvider>
-              <DialogLayerProvider>
-                <DrawerLayerProvider>
-                  <BrowserRouter>
-                    <AuthProvider>
+        <UserProvider>
+          <DimensionsProvider>
+            <SegmentsProvider>
+              <EvaluatorAssignmentsProvider>
+              <MenuLayerProvider>
+                <DialogLayerProvider>
+                  <DrawerLayerProvider>
+                    <BrowserRouter>
+                      <AuthProvider>
                       <Suspense fallback={null}>
                         <Routes>
                           <Route path="/login" element={<LoginPage />} />
@@ -68,25 +80,25 @@ const App = () => {
                           <Route
                             path="/admin/ciclos"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedAdminRoute>
                                 <GestionCiclosPage />
-                              </ProtectedRoute>
+                              </ProtectedAdminRoute>
                             }
                           />
                           <Route
                             path="/admin/dimensiones"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedAdminRoute>
                                 <DimensionesPage />
-                              </ProtectedRoute>
+                              </ProtectedAdminRoute>
                             }
                           />
                           <Route
                             path="/admin/resultados"
                             element={
-                              <ProtectedRoute>
+                              <ProtectedAdminRoute>
                                 <ResultadosPage />
-                              </ProtectedRoute>
+                              </ProtectedAdminRoute>
                             }
                           />
                         </Routes>
@@ -97,8 +109,9 @@ const App = () => {
               </DialogLayerProvider>
             </MenuLayerProvider>
           </EvaluatorAssignmentsProvider>
-          </SegmentsProvider>
-        </DimensionsProvider>
+            </SegmentsProvider>
+          </DimensionsProvider>
+        </UserProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

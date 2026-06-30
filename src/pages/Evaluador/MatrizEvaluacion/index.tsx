@@ -4,6 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Stack from '@material-hu/mui/Stack';
 import Typography from '@material-hu/mui/Typography';
 import Divider from '@material-hu/mui/Divider';
+import Tooltip from '@material-hu/mui/Tooltip';
+import { IconInfoCircle } from '@material-hu/icons/tabler';
 
 import { useDialogLayer } from '@material-hu/components/layers/Dialogs';
 import Button from '@material-hu/components/design-system/Buttons/Button';
@@ -123,7 +125,19 @@ export default function MatrizEvaluacionPage() {
                   >
                     {dim.name}
                   </Typography>
-                  <Typography variant="subtitle1">{sd.name}</Typography>
+                  <Stack sx={{ flexDirection: 'row', alignItems: 'flex-start', gap: 1 }}>
+                    <Typography variant="subtitle1">{sd.name}</Typography>
+                    {sd.description && (
+                      <Tooltip
+                        title={sd.description}
+                        arrow
+                        placement="top"
+                        sx={{ cursor: 'help' }}
+                      >
+                        <IconInfoCircle size={18} style={{ marginTop: '2px', flexShrink: 0, opacity: 0.6 }} />
+                      </Tooltip>
+                    )}
+                  </Stack>
                 </Stack>
 
                 <Divider />
