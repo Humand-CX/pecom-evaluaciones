@@ -25,9 +25,10 @@ import { useMenuLayer } from '@material-hu/components/layers/Menus';
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
 import { useDimensions } from '../../../providers/DimensionsContext';
 
-import { nameSchema, type NameFormValues } from './schema';
+import { nameSchema, subDimensionSchema, type NameFormValues, type SubDimensionFormValues } from './schema';
 
 const FORM_ID = 'dimension-name-form';
+const FORM_ID_SUB = 'sub-dimension-form';
 
 type NameFormProps = {
   onSubmit: (values: NameFormValues) => void;
@@ -49,6 +50,42 @@ const NameForm = ({ onSubmit, defaultValues, placeholder }: NameFormProps) => {
           inputProps={{ label: 'Nombre*', placeholder }}
           rules={{}}
         />
+      </form>
+    </FormProvider>
+  );
+};
+
+type SubDimensionFormProps = {
+  onSubmit: (values: SubDimensionFormValues) => void;
+  defaultValues?: SubDimensionFormValues;
+};
+
+const SubDimensionForm = ({ onSubmit, defaultValues }: SubDimensionFormProps) => {
+  const methods = useForm<SubDimensionFormValues>({
+    resolver: zodResolver(subDimensionSchema),
+    defaultValues: defaultValues ?? { name: '', description: '' },
+  });
+
+  return (
+    <FormProvider {...methods}>
+      <form id={FORM_ID_SUB} onSubmit={methods.handleSubmit(onSubmit)}>
+        <Stack sx={{ gap: 2 }}>
+          <FormInputClassic
+            name="name"
+            inputProps={{ label: 'Nombre*', placeholder: 'Ej: Compromiso con la Seguridad' }}
+            rules={{}}
+          />
+          <FormInputClassic
+            name="description"
+            inputProps={{
+              label: 'Descripción',
+              placeholder: 'Explicación de qué se evalúa en esta sub-dimensión',
+              multiline: true,
+              minRows: 3,
+            }}
+            rules={{}}
+          />
+        </Stack>
       </form>
     </FormProvider>
   );
@@ -130,33 +167,32 @@ export const DimensionesPage = () => {
       title: 'Nueva sub-dimensión',
       size: 'medium',
       children: (
-        <NameForm
+        <SubDimensionForm
           onSubmit={values => {
-            addSubDimension(dimensionId, values.name);
+            addSubDimension(dimensionId, values.name, values.description);
             closeDrawer();
           }}
-          placeholder="Ej: Compromiso con la Seguridad"
         />
       ),
-      primaryButtonProps: { children: 'Guardar', form: FORM_ID, type: 'submit' },
+      primaryButtonProps: { children: 'Guardar', form: FORM_ID_SUB, type: 'submit' },
       secondaryButtonProps: { children: 'Cancelar', onClick: () => closeDrawer() },
     });
   };
 
-  const handleEditSubDimension = (dimensionId: string, subId: string, name: string) => {
+  const handleEditSubDimension = (dimensionId: string, subId: string, name: string, description?: string) => {
     openDrawer({
       title: 'Editar sub-dimensión',
       size: 'medium',
       children: (
-        <NameForm
+        <SubDimensionForm
           onSubmit={values => {
-            updateSubDimension(dimensionId, subId, values.name);
+            updateSubDimension(dimensionId, subId, values.name, values.description);
             closeDrawer();
           }}
-          defaultValues={{ name }}
+          defaultValues={{ name, description }}
         />
       ),
-      primaryButtonProps: { children: 'Guardar', form: FORM_ID, type: 'submit' },
+      primaryButtonProps: { children: 'Guardar', form: FORM_ID_SUB, type: 'submit' },
       secondaryButtonProps: { children: 'Cancelar', onClick: () => closeDrawer() },
     });
   };
@@ -193,11 +229,12 @@ export const DimensionesPage = () => {
     dimensionId: string,
     subId: string,
     name: string,
+    description?: string,
   ) => {
     openMenu({
       anchorEl: e.currentTarget,
       items: [
-        { id: 'edit', title: 'Editar', icon: IconEdit, onSelect: () => handleEditSubDimension(dimensionId, subId, name) },
+        { id: 'edit', title: 'Editar', icon: IconEdit, onSelect: () => handleEditSubDimension(dimensionId, subId, name, description) },
         { id: 'delete', title: 'Eliminar', icon: IconTrash, onSelect: () => handleDeleteSubDimension(dimensionId, subId, name) },
       ],
     });
@@ -244,7 +281,7 @@ export const DimensionesPage = () => {
                           </Typography>
                           <IconButton
                             size="small"
-                            onClick={e => handleSubDimensionMenu(e, dim.id, sd.id, sd.name)}
+                            onClick={e => handleSubDimensionMenu(e, dim.id, sd.id, sd.name, sd.description)}
                           >
                             <IconDotsVertical size={16} />
                           </IconButton>

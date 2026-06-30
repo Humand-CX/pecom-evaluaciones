@@ -9,8 +9,8 @@ type DimensionsContextValue = {
   addDimension: (name: string) => void;
   updateDimension: (id: string, name: string) => void;
   deleteDimension: (id: string) => void;
-  addSubDimension: (dimensionId: string, name: string) => void;
-  updateSubDimension: (dimensionId: string, subId: string, name: string) => void;
+  addSubDimension: (dimensionId: string, name: string, description?: string) => void;
+  updateSubDimension: (dimensionId: string, subId: string, name: string, description?: string) => void;
   deleteSubDimension: (dimensionId: string, subId: string) => void;
   duplicateDimension: (id: string) => void;
 };
@@ -44,18 +44,18 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
     setDimensions(prev => prev.filter(d => d.id !== id));
   };
 
-  const addSubDimension = (dimensionId: string, name: string) => {
+  const addSubDimension = (dimensionId: string, name: string, description?: string) => {
     setDimensions(prev => prev.map(d =>
       d.id === dimensionId
-        ? { ...d, subDimensions: [...d.subDimensions, { id: crypto.randomUUID(), name }] }
+        ? { ...d, subDimensions: [...d.subDimensions, { id: crypto.randomUUID(), name, description }] }
         : d,
     ));
   };
 
-  const updateSubDimension = (dimensionId: string, subId: string, name: string) => {
+  const updateSubDimension = (dimensionId: string, subId: string, name: string, description?: string) => {
     setDimensions(prev => prev.map(d =>
       d.id === dimensionId
-        ? { ...d, subDimensions: d.subDimensions.map(sd => sd.id === subId ? { ...sd, name } : sd) }
+        ? { ...d, subDimensions: d.subDimensions.map(sd => sd.id === subId ? { ...sd, name, description } : sd) }
         : d,
     ));
   };
@@ -78,6 +78,7 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
       subDimensions: dimensionToDuplicate.subDimensions.map(sd => ({
         id: crypto.randomUUID(),
         name: sd.name,
+        description: sd.description,
       })),
     };
 
