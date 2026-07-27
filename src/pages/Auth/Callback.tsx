@@ -49,14 +49,14 @@ export const AuthCallbackPage = () => {
 
         // Update UserContext with real user data
         setUser({
-          id: humandUser.internalId,
+          id: humandUser.employeeInternalId,
           email: humandUser.email,
           name: humandUser.fullName,
-          role: determineRole(humandUser.roles),
+          role: determineRole(humandUser.email),
         });
 
         // Redirect to dashboard
-        navigate('/admin/ciclos');
+        navigate('/evaluador/ciclos');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Authentication failed');
         // Redirect to login after 3 seconds
@@ -89,21 +89,21 @@ export const AuthCallbackPage = () => {
 };
 
 /**
- * Determine user role based on Humand roles
- * This logic should match your authorization requirements
+ * Determine user role based on email
+ * Hardcoded admins for now - in production, fetch from Supabase users table
  */
-function determineRole(humandRoles?: string[]): 'admin' | 'evaluator' | 'viewer' {
-  if (!humandRoles) return 'viewer';
+function determineRole(email: string): 'admin' | 'evaluator' | 'viewer' {
+  const adminEmails = [
+    'sofia.gonzalez@pecomenergia.com.ar',
+    'ana.cevnia@pecomenergia.com.ar',
+  ];
 
-  // Customize this logic based on Humand roles
-  if (humandRoles.includes('admin') || humandRoles.includes('pecom_admin')) {
+  if (adminEmails.includes(email)) {
     return 'admin';
   }
-  if (humandRoles.includes('evaluator') || humandRoles.includes('pecom_evaluator')) {
-    return 'evaluator';
-  }
 
-  return 'viewer';
+  // TODO: Fetch from Supabase users table to check if admin
+  return 'evaluator';
 }
 
 export default AuthCallbackPage;
