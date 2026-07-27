@@ -17,6 +17,7 @@ import { UserProvider, useUser } from './providers/UserContext';
 import './i18n';
 
 const LoginPage = lazy(() => import('./pages/Auth/Login'));
+const AuthCallbackPage = lazy(() => import('./pages/Auth/Callback'));
 const CiclosActivosPage = lazy(() => import('./pages/Evaluador/CiclosActivos'));
 const MatrizEvaluacionPage = lazy(() => import('./pages/Evaluador/MatrizEvaluacion'));
 const GestionCiclosPage = lazy(() => import('./pages/Admin/GestionCiclos'));
@@ -60,6 +61,7 @@ const App = () => {
                       <Suspense fallback={null}>
                         <Routes>
                           <Route path="/login" element={<LoginPage />} />
+                          <Route path="/auth/callback" element={<AuthCallbackPage />} />
                           <Route path="/" element={<Navigate to="/evaluador/ciclos" replace />} />
                           <Route
                             path="/evaluador/ciclos"
