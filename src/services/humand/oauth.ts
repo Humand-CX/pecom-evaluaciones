@@ -6,8 +6,8 @@ if (!CLIENT_ID || !CALLBACK_URL || !API_URL) {
   throw new Error('Missing Humand OAuth configuration');
 }
 
-const OAUTH_AUTHORIZE_URL = `${API_URL.replace('/public/api/v1', '')}/oauth/authorize`;
-const OAUTH_TOKEN_URL = `${API_URL.replace('/public/api/v1', '')}/oauth/token`;
+const OAUTH_AUTHORIZE_URL = `${API_URL.replace('/public/api/v1', '')}/oauth2/authorize`;
+const OAUTH_TOKEN_URL = `${API_URL.replace('/public/api/v1', '')}/oauth2/token`;
 
 export const humandOAuthService = {
   /**
