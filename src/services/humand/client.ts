@@ -1,15 +1,16 @@
 const API_URL = import.meta.env.VITE_HUMAND_API_URL;
-const API_KEY = import.meta.env.HUMAND_API_KEY;
 
-if (!API_URL || !API_KEY) {
-  throw new Error('Missing Humand API credentials');
-}
+// Note: HUMAND_API_KEY is only available in backend (/api/auth/token)
+// Client uses OAuth tokens for authenticated requests
 
 async function humandFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  if (!API_URL) {
+    throw new Error('Missing VITE_HUMAND_API_URL environment variable');
+  }
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
-      'Authorization': `Basic ${API_KEY}`,
       'Content-Type': 'application/json',
       ...options?.headers,
     },
