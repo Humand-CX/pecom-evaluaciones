@@ -6,9 +6,9 @@ if (!CLIENT_ID || !CALLBACK_URL || !API_URL) {
   throw new Error('Missing Humand OAuth configuration');
 }
 
-// OAuth endpoints - using oauth.humand.co domain
-const OAUTH_AUTHORIZE_URL = `https://oauth.humand.co/oauth2/authorize`;
-const OAUTH_TOKEN_URL = `https://oauth.humand.co/oauth2/token`;
+// OAuth endpoints - using Janus OAuth in api-prod.humand.co
+const OAUTH_AUTHORIZE_URL = `https://api-prod.humand.co/api/v1/janus/oauth2/authorize`;
+const OAUTH_TOKEN_URL = `https://api-prod.humand.co/api/v1/janus/oauth2/token`;
 
 export const humandOAuthService = {
   /**
