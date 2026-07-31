@@ -2,8 +2,10 @@ const CLIENT_ID = import.meta.env.VITE_HUMAND_CLIENT_ID;
 const CALLBACK_URL = import.meta.env.VITE_HUMAND_CALLBACK_URL;
 const API_URL = import.meta.env.VITE_HUMAND_API_URL;
 
+console.log('OAuth env vars:', { CLIENT_ID, CALLBACK_URL, API_URL });
+
 if (!CLIENT_ID || !CALLBACK_URL || !API_URL) {
-  throw new Error('Missing Humand OAuth configuration');
+  throw new Error(`Missing Humand OAuth configuration - CLIENT_ID: ${!!CLIENT_ID}, CALLBACK_URL: ${!!CALLBACK_URL}, API_URL: ${!!API_URL}`);
 }
 
 // OAuth endpoints - using Janus OAuth in api-prod.humand.co
