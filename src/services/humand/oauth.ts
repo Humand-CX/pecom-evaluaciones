@@ -25,7 +25,7 @@ export const humandOAuthService = {
       redirect_uri: CALLBACK_URL,
       response_type: 'code',
       state: stateParam,
-      scope: 'openid profile email',
+      scope: '',
     });
 
     return `${OAUTH_AUTHORIZE_URL}?${params.toString()}`;
