@@ -36,12 +36,15 @@ export const humandUsersService = {
    * Get current user info using OAuth access token
    */
   async getCurrentUser(accessToken: string): Promise<HumandUser> {
-    const response = await fetch(`${import.meta.env.VITE_HUMAND_API_URL}/users/me`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${import.meta.env.VITE_HUMAND_API_URL}/users/me`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to get current user: ${response.status}`);
@@ -53,7 +56,11 @@ export const humandUsersService = {
   /**
    * List all users with pagination
    */
-  async getUsers(limit = 100, offset = 0, status?: string): Promise<HumandUsersResponse> {
+  async getUsers(
+    limit = 100,
+    offset = 0,
+    status?: string,
+  ): Promise<HumandUsersResponse> {
     const params = new URLSearchParams({
       limit: limit.toString(),
       offset: offset.toString(),
@@ -71,14 +78,17 @@ export const humandUsersService = {
    */
   async getUserById(employeeInternalId: string): Promise<HumandUser> {
     return humandFetch<HumandUser>(
-      `/users/${encodeURIComponent(employeeInternalId)}`
+      `/users/${encodeURIComponent(employeeInternalId)}`,
     );
   },
 
   /**
    * Get all active users
    */
-  async getAllActiveUsers(limit = 1000, offset = 0): Promise<HumandUsersResponse> {
+  async getAllActiveUsers(
+    limit = 1000,
+    offset = 0,
+  ): Promise<HumandUsersResponse> {
     return this.getUsers(limit, offset, 'ACTIVE');
   },
 
@@ -104,10 +114,12 @@ export const humandUsersService = {
   async getUserSubordinates(employeeInternalId: string): Promise<HumandUser[]> {
     try {
       const user = await this.getUserById(employeeInternalId);
-      const subordinates = user.relationships.filter(r => r.name === 'SUBORDINATE');
+      const subordinates = user.relationships.filter(
+        r => r.name === 'SUBORDINATE',
+      );
 
       const subordinateUsers = await Promise.all(
-        subordinates.map(sub => this.getUserById(sub.employeeInternalId))
+        subordinates.map(sub => this.getUserById(sub.employeeInternalId)),
       );
 
       return subordinateUsers.filter(Boolean) as HumandUser[];
@@ -119,10 +131,13 @@ export const humandUsersService = {
   /**
    * Get users by segmentation
    */
-  async getUsersBySegmentation(group: string, item: string): Promise<HumandUser[]> {
+  async getUsersBySegmentation(
+    group: string,
+    item: string,
+  ): Promise<HumandUser[]> {
     try {
       const response = await humandFetch<{ items: HumandUser[] }>(
-        `/segmentations/users?group=${encodeURIComponent(group)}&item=${encodeURIComponent(item)}`
+        `/segmentations/users?group=${encodeURIComponent(group)}&item=${encodeURIComponent(item)}`,
       );
       return response.items || [];
     } catch {
@@ -136,7 +151,7 @@ export const humandUsersService = {
   async getUserByEmail(email: string): Promise<HumandUser | null> {
     try {
       const response = await humandFetch<HumandUsersResponse>(
-        `/users?email=${encodeURIComponent(email)}`
+        `/users?email=${encodeURIComponent(email)}`,
       );
       return response.items?.[0] || null;
     } catch {

@@ -1,17 +1,17 @@
 import { useState } from 'react';
 
+import Alert from '@material-hu/mui/Alert';
 import Stack from '@material-hu/mui/Stack';
 import Typography from '@material-hu/mui/Typography';
-import Alert from '@material-hu/mui/Alert';
 
 import Button from '@material-hu/components/design-system/Buttons/Button';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 
-import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
 import { useDimensions } from '../../../providers/DimensionsContext';
+import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
+import { type EvaluatorAssignment } from '../../../types/evaluatorAssignments';
 import { MOCK_CYCLES } from '../../Evaluador/CiclosActivos/constants';
 import { MOCK_PEOPLE } from '../../Evaluador/MatrizEvaluacion/constants';
-import { type EvaluatorAssignment } from '../../../types/evaluatorAssignments';
 
 type CSVImportModalProps = {
   onImportSuccess: () => void;
@@ -58,7 +58,9 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
     });
   };
 
-  const validateRows = (rows: CSVRow[]): { valid: boolean; errors: ValidationError[] } => {
+  const validateRows = (
+    rows: CSVRow[],
+  ): { valid: boolean; errors: ValidationError[] } => {
     const validationErrors: ValidationError[] = [];
 
     rows.forEach((row, idx) => {
@@ -67,13 +69,19 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
       if (!row.cycle_id) {
         validationErrors.push({ row: rowNum, message: 'Falta cycle_id' });
       } else if (!MOCK_CYCLES.find(c => c.id === row.cycle_id)) {
-        validationErrors.push({ row: rowNum, message: `Ciclo no encontrado: ${row.cycle_id}` });
+        validationErrors.push({
+          row: rowNum,
+          message: `Ciclo no encontrado: ${row.cycle_id}`,
+        });
       }
 
       if (!row.dimension_id) {
         validationErrors.push({ row: rowNum, message: 'Falta dimension_id' });
       } else if (!dimensions.find(d => d.id === row.dimension_id)) {
-        validationErrors.push({ row: rowNum, message: `Dimensión no encontrada: ${row.dimension_id}` });
+        validationErrors.push({
+          row: rowNum,
+          message: `Dimensión no encontrada: ${row.dimension_id}`,
+        });
       }
 
       if (!row.evaluator_id) {
@@ -83,14 +91,19 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
       if (!row.person_id) {
         validationErrors.push({ row: rowNum, message: 'Falta person_id' });
       } else if (!MOCK_PEOPLE.find(p => p.id === row.person_id)) {
-        validationErrors.push({ row: rowNum, message: `Persona no encontrada: ${row.person_id}` });
+        validationErrors.push({
+          row: rowNum,
+          message: `Persona no encontrada: ${row.person_id}`,
+        });
       }
     });
 
     return { valid: validationErrors.length === 0, errors: validationErrors };
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const newFile = event.target.files?.[0];
     if (!newFile) return;
 
@@ -118,7 +131,13 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
 
     try {
       const assignments: EvaluatorAssignment[] = preview
-        .filter(row => row.cycle_id && row.dimension_id && row.evaluator_id && row.person_id)
+        .filter(
+          row =>
+            row.cycle_id &&
+            row.dimension_id &&
+            row.evaluator_id &&
+            row.person_id,
+        )
         .map(row => ({
           id: `${row.cycle_id}-${row.dimension_id}-${row.evaluator_id}-${row.person_id}`,
           cycleId: row.cycle_id!,
@@ -133,7 +152,14 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
       setErrors([]);
       onImportSuccess();
     } catch (error) {
-      setErrors([{ row: 0, message: 'Error al importar: ' + (error instanceof Error ? error.message : 'desconocido') }]);
+      setErrors([
+        {
+          row: 0,
+          message:
+            'Error al importar: ' +
+            (error instanceof Error ? error.message : 'desconocido'),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -159,12 +185,17 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
           <Stack sx={{ gap: 0.5 }}>
             <Typography variant="subtitle2">Errores encontrados:</Typography>
             {errors.slice(0, 5).map((error, idx) => (
-              <Typography key={idx} variant="caption">
+              <Typography
+                key={idx}
+                variant="caption"
+              >
                 Fila {error.row}: {error.message}
               </Typography>
             ))}
             {errors.length > 5 && (
-              <Typography variant="caption">... y {errors.length - 5} errores más</Typography>
+              <Typography variant="caption">
+                ... y {errors.length - 5} errores más
+              </Typography>
             )}
           </Stack>
         </Alert>
@@ -173,14 +204,24 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
       {preview.length > 0 && errors.length === 0 && (
         <CardContainer padding={16}>
           <Stack sx={{ gap: 1 }}>
-            <Typography variant="subtitle2">Preview ({preview.length} filas)</Typography>
+            <Typography variant="subtitle2">
+              Preview ({preview.length} filas)
+            </Typography>
             {preview.slice(0, 3).map((row, idx) => (
-              <Typography key={idx} variant="caption" sx={{ color: 'text.secondary' }}>
-                {row.cycle_id} → {row.dimension_id} → {row.evaluator_id} eval a {row.person_id}
+              <Typography
+                key={idx}
+                variant="caption"
+                sx={{ color: 'text.secondary' }}
+              >
+                {row.cycle_id} → {row.dimension_id} → {row.evaluator_id} eval a{' '}
+                {row.person_id}
               </Typography>
             ))}
             {preview.length > 3 && (
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Typography
+                variant="caption"
+                sx={{ color: 'text.secondary' }}
+              >
                 ... y {preview.length - 3} filas más
               </Typography>
             )}
@@ -188,7 +229,9 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
         </CardContainer>
       )}
 
-      <Stack sx={{ flexDirection: 'row', gap: 1, justifyContent: 'flex-end', pt: 2 }}>
+      <Stack
+        sx={{ flexDirection: 'row', gap: 1, justifyContent: 'flex-end', pt: 2 }}
+      >
         <Button
           variant="primary"
           disabled={!preview.length || errors.length > 0 || loading}

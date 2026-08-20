@@ -33,7 +33,7 @@ export const m2mUsersService = {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -44,7 +44,7 @@ export const m2mUsersService = {
         throw new Error(`Failed to fetch users: ${response.status}`);
       }
 
-      const data = await response.json() as HumandUser[];
+      const data = (await response.json()) as HumandUser[];
       return data;
     } catch (error) {
       console.error('[m2m-users] Service error:', error);
@@ -59,7 +59,7 @@ export const m2mUsersService = {
       const response = await fetch(`${JANUS_BASE_URL}/api/v1/users/${userId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -71,7 +71,7 @@ export const m2mUsersService = {
         throw new Error(`Failed to fetch user: ${response.status}`);
       }
 
-      const data = await response.json() as HumandUser;
+      const data = (await response.json()) as HumandUser;
       return data;
     } catch (error) {
       console.error('[m2m-users] Service error:', error);
@@ -79,10 +79,14 @@ export const m2mUsersService = {
     }
   },
 
-  async getUsersByManager(managerEmployeeInternalId: string): Promise<HumandUser[]> {
+  async getUsersByManager(
+    managerEmployeeInternalId: string,
+  ): Promise<HumandUser[]> {
     try {
       const users = await this.getUsers();
-      return users.filter((u) => u.managerEmployeeInternalId === managerEmployeeInternalId);
+      return users.filter(
+        u => u.managerEmployeeInternalId === managerEmployeeInternalId,
+      );
     } catch (error) {
       console.error('[m2m-users] Service error:', error);
       throw error;

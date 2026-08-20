@@ -1,8 +1,18 @@
-import type { Cycle, CycleStatus } from './types';
+import { type Cycle, type CycleStatus } from './types';
 
-type PillType = 'error' | 'success' | 'warning' | 'info' | 'highlight' | 'neutral' | 'disabled';
+type PillType =
+  | 'error'
+  | 'success'
+  | 'warning'
+  | 'info'
+  | 'highlight'
+  | 'neutral'
+  | 'disabled';
 
-export const STATUS_CONFIG: Record<CycleStatus, { label: string; type: PillType }> = {
+export const STATUS_CONFIG: Record<
+  CycleStatus,
+  { label: string; type: PillType }
+> = {
   active: { label: 'ACTIVO', type: 'success' },
   closed: { label: 'CERRADO', type: 'neutral' },
   draft: { label: 'BORRADOR', type: 'warning' },

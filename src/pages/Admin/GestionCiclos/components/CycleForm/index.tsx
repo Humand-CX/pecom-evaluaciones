@@ -1,17 +1,17 @@
-import { FormProvider, useForm, Controller } from 'react-hook-form';
+import { Controller, FormProvider, useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import Stack from '@material-hu/mui/Stack';
 import Checkbox from '@material-hu/mui/Checkbox';
-import Typography from '@material-hu/mui/Typography';
 import FormControlLabel from '@material-hu/mui/FormControlLabel';
+import Stack from '@material-hu/mui/Stack';
+import Typography from '@material-hu/mui/Typography';
 
-import FormInputClassic from '@material-hu/components/design-system/Inputs/Classic/form';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
+import FormInputClassic from '@material-hu/components/design-system/Inputs/Classic/form';
 
 import { useDimensions } from '../../../../../providers/DimensionsContext';
 import { useSegments } from '../../../../../providers/SegmentsContext';
-import { cycleSchema, type CycleFormValues } from '../../schema';
+import { type CycleFormValues, cycleSchema } from '../../schema';
 
 type CycleFormProps = {
   formId: string;
@@ -19,7 +19,11 @@ type CycleFormProps = {
   defaultValues?: Partial<CycleFormValues>;
 };
 
-export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) => {
+export const CycleForm = ({
+  formId,
+  onSubmit,
+  defaultValues,
+}: CycleFormProps) => {
   const { dimensions } = useDimensions();
   const { segments } = useSegments();
 
@@ -42,7 +46,10 @@ export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) =
 
   return (
     <FormProvider {...methods}>
-      <form id={formId} onSubmit={methods.handleSubmit(onSubmit)}>
+      <form
+        id={formId}
+        onSubmit={methods.handleSubmit(onSubmit)}
+      >
         <Stack sx={{ gap: 2 }}>
           <FormInputClassic
             name="name"
@@ -74,8 +81,12 @@ export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) =
                 render={({ field }) => (
                   <Stack sx={{ gap: 1 }}>
                     {dimensions.length === 0 ? (
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        No hay dimensiones disponibles. Creá algunas en el Banco de dimensiones.
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'text.secondary' }}
+                      >
+                        No hay dimensiones disponibles. Creá algunas en el Banco
+                        de dimensiones.
                       </Typography>
                     ) : (
                       dimensions.map(dimension => (
@@ -87,7 +98,9 @@ export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) =
                               onChange={e => {
                                 const newValue = e.target.checked
                                   ? [...field.value, dimension.id]
-                                  : field.value.filter(id => id !== dimension.id);
+                                  : field.value.filter(
+                                      id => id !== dimension.id,
+                                    );
                                 field.onChange(newValue);
                               }}
                             />
@@ -100,7 +113,10 @@ export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) =
                 )}
               />
               {dimensionError && (
-                <Typography variant="caption" sx={{ color: 'error.main' }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'error.main' }}
+                >
                   {dimensionError}
                 </Typography>
               )}
@@ -109,14 +125,19 @@ export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) =
 
           <CardContainer padding={16}>
             <Stack sx={{ gap: 1.5 }}>
-              <Typography variant="subtitle2">Segmentos de Personas*</Typography>
+              <Typography variant="subtitle2">
+                Segmentos de Personas*
+              </Typography>
               <Controller
                 name="segmentIds"
                 control={control}
                 render={({ field }) => (
                   <Stack sx={{ gap: 1 }}>
                     {segments.length === 0 ? (
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'text.secondary' }}
+                      >
                         No hay segmentos disponibles.
                       </Typography>
                     ) : (
@@ -142,7 +163,10 @@ export const CycleForm = ({ formId, onSubmit, defaultValues }: CycleFormProps) =
                 )}
               />
               {segmentError && (
-                <Typography variant="caption" sx={{ color: 'error.main' }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'error.main' }}
+                >
                   {segmentError}
                 </Typography>
               )}

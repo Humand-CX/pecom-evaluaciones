@@ -28,7 +28,9 @@ export const humandSegmentationsService = {
   /**
    * Get a specific segmentation group by name
    */
-  async getSegmentationByName(groupName: string): Promise<SegmentationGroup | null> {
+  async getSegmentationByName(
+    groupName: string,
+  ): Promise<SegmentationGroup | null> {
     try {
       const groups = await this.getSegmentations();
       return groups.find(g => g.name === groupName) || null;

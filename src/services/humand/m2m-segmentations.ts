@@ -33,18 +33,21 @@ export const m2mSegmentationsService = {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
         const error = await response.text();
-        console.error('[m2m-segmentations] Error fetching segmentations:', error);
+        console.error(
+          '[m2m-segmentations] Error fetching segmentations:',
+          error,
+        );
         throw new Error(`Failed to fetch segmentations: ${response.status}`);
       }
 
-      const data = await response.json() as Segmentation[];
+      const data = (await response.json()) as Segmentation[];
       return data;
     } catch (error) {
       console.error('[m2m-segmentations] Service error:', error);
@@ -52,26 +55,34 @@ export const m2mSegmentationsService = {
     }
   },
 
-  async getSegmentationById(segmentationId: string): Promise<Segmentation | null> {
+  async getSegmentationById(
+    segmentationId: string,
+  ): Promise<Segmentation | null> {
     try {
       const accessToken = await m2mAuthService.getAccessToken();
 
-      const response = await fetch(`${JANUS_BASE_URL}/api/v1/segmentations/${segmentationId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${JANUS_BASE_URL}/api/v1/segmentations/${segmentationId}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         if (response.status === 404) return null;
         const error = await response.text();
-        console.error('[m2m-segmentations] Error fetching segmentation:', error);
+        console.error(
+          '[m2m-segmentations] Error fetching segmentation:',
+          error,
+        );
         throw new Error(`Failed to fetch segmentation: ${response.status}`);
       }
 
-      const data = await response.json() as Segmentation;
+      const data = (await response.json()) as Segmentation;
       return data;
     } catch (error) {
       console.error('[m2m-segmentations] Service error:', error);
@@ -79,7 +90,9 @@ export const m2mSegmentationsService = {
     }
   },
 
-  async getSegmentationItems(segmentationId: string): Promise<SegmentationItem[]> {
+  async getSegmentationItems(
+    segmentationId: string,
+  ): Promise<SegmentationItem[]> {
     try {
       const segmentation = await this.getSegmentationById(segmentationId);
       return segmentation?.items || [];

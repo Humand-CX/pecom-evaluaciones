@@ -1,23 +1,26 @@
 import { useMemo } from 'react';
 
 import Stack from '@material-hu/mui/Stack';
-import Typography from '@material-hu/mui/Typography';
 import { useTheme } from '@material-hu/mui/styles';
+import Typography from '@material-hu/mui/Typography';
 
+import CardContainer from '@material-hu/components/design-system/CardContainer';
+import Pills from '@material-hu/components/design-system/Pills';
 import Table from '@material-hu/components/design-system/Table';
 import TableBody from '@material-hu/components/design-system/Table/components/TableBody';
 import TableCell from '@material-hu/components/design-system/Table/components/TableCell';
 import TableContainer from '@material-hu/components/design-system/Table/components/TableContainer';
 import TableHead from '@material-hu/components/design-system/Table/components/TableHead';
 import TableRow from '@material-hu/components/design-system/Table/components/TableRow';
-import Pills from '@material-hu/components/design-system/Pills';
-import CardContainer from '@material-hu/components/design-system/CardContainer';
 
 import { useDimensions } from '../../../providers/DimensionsContext';
-import { useSegments } from '../../../providers/SegmentsContext';
 import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
+import { useSegments } from '../../../providers/SegmentsContext';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
-import { DIMENSIONS, MOCK_PEOPLE } from '../../Evaluador/MatrizEvaluacion/constants';
+import {
+  DIMENSIONS,
+  MOCK_PEOPLE,
+} from '../../Evaluador/MatrizEvaluacion/constants';
 import { MOCK_RESULTS } from '../Resultados/constants';
 
 type CycleDetailsModalProps = {
@@ -31,14 +34,19 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
   const { assignments } = useEvaluatorAssignments();
 
   const allDimensions = dimensions.length > 0 ? dimensions : DIMENSIONS;
-  const cycleDimensions = allDimensions.filter(d => cycle.dimensionIds.includes(d.id));
-  const subDimensionCount = cycleDimensions.reduce((sum, d) => sum + d.subDimensions.length, 0);
+  const cycleDimensions = allDimensions.filter(d =>
+    cycle.dimensionIds.includes(d.id),
+  );
+  const subDimensionCount = cycleDimensions.reduce(
+    (sum, d) => sum + d.subDimensions.length,
+    0,
+  );
 
   // Get persons from selected segments
   const cyclePersons = MOCK_PEOPLE.filter(person =>
     segments
       .filter(seg => cycle.segmentIds.includes(seg.id))
-      .some(seg => seg.personIds.includes(person.id))
+      .some(seg => seg.personIds.includes(person.id)),
   );
 
   // Get all results for this cycle
@@ -46,18 +54,23 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
 
   // Calculate completion stats
   const evaluationStats = useMemo(() => {
-    let totalExpected = cyclePersons.length * subDimensionCount;
+    const totalExpected = cyclePersons.length * subDimensionCount;
     let totalCompleted = 0;
 
     cyclePersons.forEach(person => {
       const result = cycleResults.find(r => r.personId === person.id);
       if (result) {
-        const completedCount = Object.values(result.scores).filter(score => score != null).length;
+        const completedCount = Object.values(result.scores).filter(
+          score => score != null,
+        ).length;
         totalCompleted += completedCount;
       }
     });
 
-    const percentage = totalExpected > 0 ? Math.round((totalCompleted / totalExpected) * 100) : 0;
+    const percentage =
+      totalExpected > 0
+        ? Math.round((totalCompleted / totalExpected) * 100)
+        : 0;
     return { totalCompleted, totalExpected, percentage };
   }, [cyclePersons, cycleResults, subDimensionCount]);
 
@@ -65,20 +78,24 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
   const tableData = cyclePersons.map(person => {
     const segment = segments.find(seg => seg.personIds.includes(person.id));
     const personAssignments = assignments.filter(
-      a => a.cycleId === cycle.id && a.personId === person.id
+      a => a.cycleId === cycle.id && a.personId === person.id,
     );
-    const uniqueEvaluators = [...new Set(personAssignments.map(a => a.evaluatorId))];
+    const uniqueEvaluators = [
+      ...new Set(personAssignments.map(a => a.evaluatorId)),
+    ];
 
     const result = cycleResults.find(r => r.personId === person.id);
     const completedScores = result
       ? Object.values(result.scores).filter(score => score != null).length
       : 0;
-    const isCompleted = completedScores === subDimensionCount && subDimensionCount > 0;
+    const isCompleted =
+      completedScores === subDimensionCount && subDimensionCount > 0;
 
     return {
       person,
       segment: segment?.name || 'Sin segmento',
-      evaluators: uniqueEvaluators.length > 0 ? uniqueEvaluators : ['Sin asignar'],
+      evaluators:
+        uniqueEvaluators.length > 0 ? uniqueEvaluators : ['Sin asignar'],
       isCompleted,
       completedScores,
     };
@@ -92,19 +109,33 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
           <Typography variant="subtitle1">Progreso del Ciclo</Typography>
           <Stack sx={{ gap: 0.5 }}>
             <Typography variant="body2">
-              {evaluationStats.totalCompleted} de {evaluationStats.totalExpected} respuestas completadas
+              {evaluationStats.totalCompleted} de{' '}
+              {evaluationStats.totalExpected} respuestas completadas
             </Typography>
-            <Stack sx={{ height: 8, bgcolor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
+            <Stack
+              sx={{
+                height: 8,
+                bgcolor: 'divider',
+                borderRadius: 1,
+                overflow: 'hidden',
+              }}
+            >
               <Stack
                 sx={{
                   height: '100%',
                   width: `${evaluationStats.percentage}%`,
-                  bgcolor: evaluationStats.percentage === 100 ? 'success.main' : 'primary.main',
+                  bgcolor:
+                    evaluationStats.percentage === 100
+                      ? 'success.main'
+                      : 'primary.main',
                   transition: 'width 0.3s ease',
                 }}
               />
             </Stack>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            <Typography
+              variant="caption"
+              sx={{ color: 'text.secondary' }}
+            >
               {evaluationStats.percentage}% completado
             </Typography>
           </Stack>
@@ -114,10 +145,17 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
       {/* Dimensiones asociadas */}
       <CardContainer padding={16}>
         <Stack sx={{ gap: 1 }}>
-          <Typography variant="subtitle2">Dimensiones ({cycleDimensions.length})</Typography>
+          <Typography variant="subtitle2">
+            Dimensiones ({cycleDimensions.length})
+          </Typography>
           <Stack sx={{ gap: 0.5, flexWrap: 'wrap', flexDirection: 'row' }}>
             {cycleDimensions.map(dim => (
-              <Pills key={dim.id} label={dim.name} type="info" size="small" />
+              <Pills
+                key={dim.id}
+                label={dim.name}
+                type="info"
+                size="small"
+              />
             ))}
           </Stack>
         </Stack>
@@ -142,7 +180,10 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
                   <TableCell>
                     <Stack sx={{ gap: 0 }}>
                       <Typography variant="body2">{row.person.name}</Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'text.secondary' }}
+                      >
                         {row.person.legajo}
                       </Typography>
                     </Stack>
@@ -153,7 +194,10 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
                   <TableCell>
                     <Stack sx={{ gap: 0.5 }}>
                       {row.evaluators.map((evaluator, idx) => (
-                        <Typography key={idx} variant="caption">
+                        <Typography
+                          key={idx}
+                          variant="caption"
+                        >
                           {evaluator}
                         </Typography>
                       ))}
@@ -201,7 +245,8 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
                 <strong>Sub-dimensiones totales:</strong> {subDimensionCount}
               </Typography>
               <Typography variant="caption">
-                <strong>Respuestas esperadas:</strong> {evaluationStats.totalExpected}
+                <strong>Respuestas esperadas:</strong>{' '}
+                {evaluationStats.totalExpected}
               </Typography>
             </Stack>
           </Stack>

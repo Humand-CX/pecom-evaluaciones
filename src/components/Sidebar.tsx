@@ -1,14 +1,17 @@
 import { useNavigate } from 'react-router-dom';
+
+import {
+  IconChartBar,
+  IconClipboardList,
+  IconLogout,
+  IconSettings,
+} from '@material-hu/icons/tabler';
 import Stack from '@material-hu/mui/Stack';
 import Typography from '@material-hu/mui/Typography';
+
 import Button from '@material-hu/components/design-system/Buttons/Button';
+
 import { useUser } from '../providers/UserContext';
-import {
-  IconClipboardList,
-  IconSettings,
-  IconChartBar,
-  IconLogout,
-} from '@material-hu/icons/tabler';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -20,20 +23,28 @@ export const Sidebar = () => {
   };
 
   return (
-    <Stack sx={{
-      width: '100%',
-      gap: 2,
-      p: 2,
-      borderRight: '1px solid',
-      borderColor: 'divider',
-      minHeight: '100vh',
-    }}>
+    <Stack
+      sx={{
+        width: '100%',
+        gap: 2,
+        p: 2,
+        borderRight: '1px solid',
+        borderColor: 'divider',
+        minHeight: '100vh',
+      }}
+    >
       {/* Header */}
       <Stack sx={{ gap: 0.5 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{ fontWeight: 700 }}
+        >
           {user?.name}
         </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.secondary' }}
+        >
           {isAdmin ? 'Administrador' : isEvaluator ? 'Evaluador' : 'Evaluado'}
         </Typography>
       </Stack>

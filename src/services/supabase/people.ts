@@ -62,10 +62,7 @@ export const peopleService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
-      .from('people')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('people').delete().eq('id', id);
     if (error) throw error;
   },
 };

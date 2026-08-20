@@ -21,7 +21,9 @@ export function useUsers(instanceId?: string) {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const url = instanceId ? `/api/users?instanceId=${instanceId}` : '/api/users';
+        const url = instanceId
+          ? `/api/users?instanceId=${instanceId}`
+          : '/api/users';
         const response = await fetch(url);
 
         if (!response.ok) {

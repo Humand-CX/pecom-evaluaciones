@@ -3,7 +3,10 @@ const API_URL = import.meta.env.VITE_HUMAND_API_URL;
 // Note: HUMAND_API_KEY is only available in backend (/api/auth/token)
 // Client uses OAuth tokens for authenticated requests
 
-async function humandFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function humandFetch<T>(
+  endpoint: string,
+  options?: RequestInit,
+): Promise<T> {
   if (!API_URL) {
     throw new Error('Missing VITE_HUMAND_API_URL environment variable');
   }

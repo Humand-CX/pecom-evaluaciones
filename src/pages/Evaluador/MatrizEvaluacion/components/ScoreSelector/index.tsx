@@ -1,10 +1,10 @@
-import { useTheme } from '@material-hu/mui/styles';
 import Stack from '@material-hu/mui/Stack';
+import { useTheme } from '@material-hu/mui/styles';
 
 import Button from '@material-hu/components/design-system/Buttons/Button';
 
-import { type ScoreValue } from '../../types';
 import { SCORE_LABELS } from '../../constants';
+import { type ScoreValue } from '../../types';
 
 type ScoreSelectorProps = {
   value: ScoreValue | null;
@@ -14,7 +14,11 @@ type ScoreSelectorProps = {
 
 const SCORES: ScoreValue[] = [1, 2, 3, 4, 5];
 
-export const ScoreSelector = ({ value, onChange, disabled = false }: ScoreSelectorProps) => {
+export const ScoreSelector = ({
+  value,
+  onChange,
+  disabled = false,
+}: ScoreSelectorProps) => {
   const theme = useTheme();
 
   return (

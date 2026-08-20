@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useUser } from '../../providers/UserContext';
-import { humandUsersService, humandOAuthService } from '../../services/humand';
-import Stack from '@material-hu/mui/Stack';
+
 import CircularProgress from '@material-hu/mui/CircularProgress';
+import Stack from '@material-hu/mui/Stack';
 import Typography from '@material-hu/mui/Typography';
+
+import { useUser } from '../../providers/UserContext';
+import { humandOAuthService, humandUsersService } from '../../services/humand';
 
 export const AuthCallbackPage = () => {
   const navigate = useNavigate();
@@ -32,7 +34,8 @@ export const AuthCallbackPage = () => {
           throw new Error('Failed to exchange code for token');
         }
 
-        const { accessToken, refreshToken, expiresIn } = await tokenResponse.json();
+        const { accessToken, refreshToken, expiresIn } =
+          await tokenResponse.json();
 
         // Store tokens
         humandOAuthService.storeTokens(accessToken, refreshToken, expiresIn);
@@ -62,11 +65,24 @@ export const AuthCallbackPage = () => {
 
   if (error) {
     return (
-      <Stack sx={{ alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 2 }}>
-        <Typography variant="h6" sx={{ color: 'error.main' }}>
+      <Stack
+        sx={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          gap: 2,
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{ color: 'error.main' }}
+        >
           {error}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        <Typography
+          variant="body2"
+          sx={{ color: 'text.secondary' }}
+        >
           Redirigiendo a login...
         </Typography>
       </Stack>
@@ -74,7 +90,14 @@ export const AuthCallbackPage = () => {
   }
 
   return (
-    <Stack sx={{ alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 2 }}>
+    <Stack
+      sx={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        gap: 2,
+      }}
+    >
       <CircularProgress />
       <Typography variant="body1">Autenticando...</Typography>
     </Stack>

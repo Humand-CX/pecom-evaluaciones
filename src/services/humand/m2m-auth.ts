@@ -19,12 +19,14 @@ export const m2mAuthService = {
     }
 
     // Solicitar nuevo token a Janus
-    const basicAuth = Buffer.from(`${M2M_CLIENT_ID}:${M2M_CLIENT_SECRET}`).toString('base64');
+    const basicAuth = Buffer.from(
+      `${M2M_CLIENT_ID}:${M2M_CLIENT_SECRET}`,
+    ).toString('base64');
 
     const response = await fetch(`${JANUS_BASE_URL}/oauth2/token`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${basicAuth}`,
+        Authorization: `Basic ${basicAuth}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
@@ -39,7 +41,7 @@ export const m2mAuthService = {
       throw new Error(`Failed to get M2M token: ${error}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       access_token: string;
       expires_in: number;
       token_type: string;

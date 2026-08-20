@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+
 import { type EvaluatorAssignment } from '../types/evaluatorAssignments';
 
 const STORAGE_KEY = 'pecom-evaluator-assignments';
@@ -8,12 +15,16 @@ type EvaluatorAssignmentsContextValue = {
   addAssignment: (assignment: EvaluatorAssignment) => void;
   addBulkAssignments: (assignments: EvaluatorAssignment[]) => void;
   deleteAssignment: (id: string) => void;
-  getAssignmentsByCycleDimension: (cycleId: string, dimensionId: string) => EvaluatorAssignment[];
+  getAssignmentsByCycleDimension: (
+    cycleId: string,
+    dimensionId: string,
+  ) => EvaluatorAssignment[];
   getAssignmentsByEvaluator: (evaluatorId: string) => EvaluatorAssignment[];
   deleteAssignmentsByCycle: (cycleId: string) => void;
 };
 
-const EvaluatorAssignmentsContext = createContext<EvaluatorAssignmentsContextValue | null>(null);
+const EvaluatorAssignmentsContext =
+  createContext<EvaluatorAssignmentsContextValue | null>(null);
 
 function loadFromStorage(): EvaluatorAssignment[] {
   try {
@@ -23,8 +34,13 @@ function loadFromStorage(): EvaluatorAssignment[] {
   return [];
 }
 
-export const EvaluatorAssignmentsProvider = ({ children }: { children: ReactNode }) => {
-  const [assignments, setAssignments] = useState<EvaluatorAssignment[]>(loadFromStorage);
+export const EvaluatorAssignmentsProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
+  const [assignments, setAssignments] =
+    useState<EvaluatorAssignment[]>(loadFromStorage);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
@@ -42,8 +58,13 @@ export const EvaluatorAssignmentsProvider = ({ children }: { children: ReactNode
     setAssignments(prev => prev.filter(a => a.id !== id));
   };
 
-  const getAssignmentsByCycleDimension = (cycleId: string, dimensionId: string) => {
-    return assignments.filter(a => a.cycleId === cycleId && a.dimensionId === dimensionId);
+  const getAssignmentsByCycleDimension = (
+    cycleId: string,
+    dimensionId: string,
+  ) => {
+    return assignments.filter(
+      a => a.cycleId === cycleId && a.dimensionId === dimensionId,
+    );
   };
 
   const getAssignmentsByEvaluator = (evaluatorId: string) => {
@@ -73,6 +94,9 @@ export const EvaluatorAssignmentsProvider = ({ children }: { children: ReactNode
 
 export const useEvaluatorAssignments = () => {
   const ctx = useContext(EvaluatorAssignmentsContext);
-  if (!ctx) throw new Error('useEvaluatorAssignments must be used within EvaluatorAssignmentsProvider');
+  if (!ctx)
+    throw new Error(
+      'useEvaluatorAssignments must be used within EvaluatorAssignmentsProvider',
+    );
   return ctx;
 };

@@ -54,10 +54,7 @@ export const cyclesService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
-      .from('cycles')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('cycles').delete().eq('id', id);
     if (error) throw error;
   },
 };

@@ -12,6 +12,7 @@ import {
 import IconButton from '@material-hu/mui/IconButton';
 import Stack from '@material-hu/mui/Stack';
 
+import StateCard from '@material-hu/components/composed-components/StateCard';
 import Button from '@material-hu/components/design-system/Buttons/Button';
 import Pills from '@material-hu/components/design-system/Pills';
 import Table from '@material-hu/components/design-system/Table';
@@ -21,16 +22,19 @@ import TableContainer from '@material-hu/components/design-system/Table/componen
 import TableHead from '@material-hu/components/design-system/Table/components/TableHead';
 import TableRow from '@material-hu/components/design-system/Table/components/TableRow';
 import Title from '@material-hu/components/design-system/Title';
-import StateCard from '@material-hu/components/composed-components/StateCard';
 import { useDrawerLayer } from '@material-hu/components/layers/Drawers';
 import { useMenuLayer } from '@material-hu/components/layers/Menus';
 
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
+import {
+  MOCK_CYCLES,
+  STATUS_CONFIG,
+} from '../../Evaluador/CiclosActivos/constants';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
-import { MOCK_CYCLES, STATUS_CONFIG } from '../../Evaluador/CiclosActivos/constants';
-import { CycleForm } from './components/CycleForm';
+
 import { CSVImportModal } from './CSVImportModal';
 import { CycleDetailsModal } from './CycleDetailsModal';
+import { CycleForm } from './components/CycleForm';
 import { EvaluatorAssignmentModal } from './EvaluatorAssignmentModal';
 import { type CycleFormValues } from './schema';
 
@@ -66,11 +70,15 @@ export const GestionCiclosPage = () => {
   };
 
   const handleActivate = (cycle: Cycle) => {
-    setCycles(prev => prev.map(c => (c.id === cycle.id ? { ...c, status: 'active' } : c)));
+    setCycles(prev =>
+      prev.map(c => (c.id === cycle.id ? { ...c, status: 'active' } : c)),
+    );
   };
 
   const handleClose = (cycle: Cycle) => {
-    setCycles(prev => prev.map(c => (c.id === cycle.id ? { ...c, status: 'closed' } : c)));
+    setCycles(prev =>
+      prev.map(c => (c.id === cycle.id ? { ...c, status: 'closed' } : c)),
+    );
   };
 
   const handleEdit = (cycle: Cycle) => {
@@ -91,8 +99,15 @@ export const GestionCiclosPage = () => {
           }}
         />
       ),
-      primaryButtonProps: { children: 'Guardar', form: 'cycle-form', type: 'submit' },
-      secondaryButtonProps: { children: 'Cancelar', onClick: () => closeDrawer() },
+      primaryButtonProps: {
+        children: 'Guardar',
+        form: 'cycle-form',
+        type: 'submit',
+      },
+      secondaryButtonProps: {
+        children: 'Cancelar',
+        onClick: () => closeDrawer(),
+      },
     });
   };
 
@@ -100,9 +115,21 @@ export const GestionCiclosPage = () => {
     openDrawer({
       title: 'Nuevo ciclo',
       size: 'medium',
-      children: <CycleForm formId="cycle-form" onSubmit={values => handleSave(values)} />,
-      primaryButtonProps: { children: 'Guardar', form: 'cycle-form', type: 'submit' },
-      secondaryButtonProps: { children: 'Cancelar', onClick: () => closeDrawer() },
+      children: (
+        <CycleForm
+          formId="cycle-form"
+          onSubmit={values => handleSave(values)}
+        />
+      ),
+      primaryButtonProps: {
+        children: 'Guardar',
+        form: 'cycle-form',
+        type: 'submit',
+      },
+      secondaryButtonProps: {
+        children: 'Cancelar',
+        onClick: () => closeDrawer(),
+      },
     });
   };
 
@@ -112,7 +139,10 @@ export const GestionCiclosPage = () => {
       size: 'medium',
       children: <CSVImportModal onImportSuccess={closeDrawer} />,
       primaryButtonProps: { disabled: true },
-      secondaryButtonProps: { children: 'Cerrar', onClick: () => closeDrawer() },
+      secondaryButtonProps: {
+        children: 'Cerrar',
+        onClick: () => closeDrawer(),
+      },
     });
   };
 
@@ -122,7 +152,10 @@ export const GestionCiclosPage = () => {
       size: 'large',
       children: <CycleDetailsModal cycle={cycle} />,
       primaryButtonProps: { disabled: true },
-      secondaryButtonProps: { children: 'Cerrar', onClick: () => closeDrawer() },
+      secondaryButtonProps: {
+        children: 'Cerrar',
+        onClick: () => closeDrawer(),
+      },
     });
   };
 
@@ -130,9 +163,17 @@ export const GestionCiclosPage = () => {
     openDrawer({
       title: `${cycle.name} - Asignar Evaluadores`,
       size: 'medium',
-      children: <EvaluatorAssignmentModal cycle={cycle} onSuccess={closeDrawer} />,
+      children: (
+        <EvaluatorAssignmentModal
+          cycle={cycle}
+          onSuccess={closeDrawer}
+        />
+      ),
       primaryButtonProps: { disabled: true },
-      secondaryButtonProps: { children: 'Cerrar', onClick: () => closeDrawer() },
+      secondaryButtonProps: {
+        children: 'Cerrar',
+        onClick: () => closeDrawer(),
+      },
     });
   };
 
@@ -140,9 +181,24 @@ export const GestionCiclosPage = () => {
     openMenu({
       anchorEl: e.currentTarget,
       items: [
-        { id: 'edit', title: 'Editar', icon: IconEdit, onSelect: () => handleEdit(item) },
-        { id: 'activate', title: 'Activar', icon: IconPlayerPlay, onSelect: () => handleActivate(item) },
-        { id: 'close', title: 'Cerrar', icon: IconLock, onSelect: () => handleClose(item) },
+        {
+          id: 'edit',
+          title: 'Editar',
+          icon: IconEdit,
+          onSelect: () => handleEdit(item),
+        },
+        {
+          id: 'activate',
+          title: 'Activar',
+          icon: IconPlayerPlay,
+          onSelect: () => handleActivate(item),
+        },
+        {
+          id: 'close',
+          title: 'Cerrar',
+          icon: IconLock,
+          onSelect: () => handleClose(item),
+        },
       ],
     });
   };
@@ -150,13 +206,29 @@ export const GestionCiclosPage = () => {
   return (
     <DashboardLayout>
       <Stack sx={{ gap: 3 }}>
-        <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Title title="Gestión de ciclos" description="Administrá los ciclos de evaluación" />
+        <Stack
+          sx={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          }}
+        >
+          <Title
+            title="Gestión de ciclos"
+            description="Administrá los ciclos de evaluación"
+          />
           <Stack sx={{ flexDirection: 'row', gap: 1 }}>
-            <Button variant="secondary" startIcon={<IconUpload />} onClick={handleOpenImport}>
+            <Button
+              variant="secondary"
+              startIcon={<IconUpload />}
+              onClick={handleOpenImport}
+            >
               Importar asignaciones
             </Button>
-            <Button startIcon={<IconPlus />} onClick={handleNew}>
+            <Button
+              startIcon={<IconPlus />}
+              onClick={handleNew}
+            >
               Nuevo ciclo
             </Button>
           </Stack>
@@ -190,14 +262,25 @@ export const GestionCiclosPage = () => {
                     <TableCell>{formatDate(cycle.start_date)}</TableCell>
                     <TableCell>{formatDate(cycle.end_date)}</TableCell>
                     <TableCell>
-                      <Pills type={STATUS_CONFIG[cycle.status].type} label={STATUS_CONFIG[cycle.status].label} />
+                      <Pills
+                        type={STATUS_CONFIG[cycle.status].type}
+                        label={STATUS_CONFIG[cycle.status].label}
+                      />
                     </TableCell>
                     <TableCell>
                       <Stack sx={{ flexDirection: 'row', gap: 0.5 }}>
-                        <Button variant="secondary" size="small" onClick={() => handleViewDetails(cycle)}>
+                        <Button
+                          variant="secondary"
+                          size="small"
+                          onClick={() => handleViewDetails(cycle)}
+                        >
                           Ver detalles
                         </Button>
-                        <Button variant="secondary" size="small" onClick={() => handleAssignEvaluators(cycle)}>
+                        <Button
+                          variant="secondary"
+                          size="small"
+                          onClick={() => handleAssignEvaluators(cycle)}
+                        >
                           Asignar
                         </Button>
                         <IconButton onClick={e => handleOpenMenu(e, cycle)}>

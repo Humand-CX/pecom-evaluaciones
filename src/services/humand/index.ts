@@ -1,14 +1,14 @@
 export { humandFetch } from './client';
-export {
-  humandUsersService,
-  type HumandUser,
-  type HumandUsersResponse,
-  type HumandRelationship,
-  type HumandSegmentation,
-} from './users';
+export { humandOAuthService } from './oauth';
 export {
   humandSegmentationsService,
   type SegmentationGroup,
   type SegmentationItem,
 } from './segmentations';
-export { humandOAuthService } from './oauth';
+export {
+  type HumandRelationship,
+  type HumandSegmentation,
+  type HumandUser,
+  type HumandUsersResponse,
+  humandUsersService,
+} from './users';

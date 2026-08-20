@@ -2,10 +2,10 @@ import { type ReactNode, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import {
+  IconChartBar,
   IconClipboardList,
   IconRuler,
   IconSettings,
-  IconChartBar,
 } from '@material-hu/icons/tabler';
 import Stack from '@material-hu/mui/Stack';
 
@@ -76,7 +76,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         isAdmin={false}
         avatarProps={{ text: 'U' }}
         avatarPopoverContent={
-          <Button onClick={() => logout()} variant="text">
+          <Button
+            onClick={() => logout()}
+            variant="text"
+          >
             Cerrar sesión
           </Button>
         }

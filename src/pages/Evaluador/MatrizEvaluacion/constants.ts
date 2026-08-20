@@ -1,5 +1,6 @@
-import { type Dimension, type Person } from './types';
 import { type Segment } from '../../../types/segment';
+
+import { type Dimension, type Person } from './types';
 
 export const DIMENSIONS: Dimension[] = [
   {
@@ -9,17 +10,20 @@ export const DIMENSIONS: Dimension[] = [
       {
         id: 'seguridad',
         name: 'Compromiso con la Seguridad',
-        description: 'Capacidad de demostrar compromiso genuino con la seguridad en todas las actividades. Evalúa el cumplimiento de normas de seguridad y el uso de equipos de protección.'
+        description:
+          'Capacidad de demostrar compromiso genuino con la seguridad en todas las actividades. Evalúa el cumplimiento de normas de seguridad y el uso de equipos de protección.',
       },
       {
         id: 'peligros',
         name: 'Identificación de Peligros y Control de Riesgos',
-        description: 'Habilidad para identificar peligros potenciales y tomar acciones preventivas. Evalúa la proactividad en la detección de riesgos y la propuesta de medidas de control.'
+        description:
+          'Habilidad para identificar peligros potenciales y tomar acciones preventivas. Evalúa la proactividad en la detección de riesgos y la propuesta de medidas de control.',
       },
       {
         id: 'cultura',
         name: 'Cultura Segura',
-        description: 'Contribución a la construcción de una cultura de seguridad en el equipo y la organización. Evalúa la promoción de prácticas seguras entre colegas.'
+        description:
+          'Contribución a la construcción de una cultura de seguridad en el equipo y la organización. Evalúa la promoción de prácticas seguras entre colegas.',
       },
     ],
   },
@@ -30,12 +34,14 @@ export const DIMENSIONS: Dimension[] = [
       {
         id: 'conocimiento-aplicacion',
         name: 'Conocimiento y aplicación',
-        description: 'Dominio de los conocimientos técnicos requeridos para el rol y su aplicación práctica en el desempeño de funciones. Evalúa la actualización y profundidad del conocimiento.'
+        description:
+          'Dominio de los conocimientos técnicos requeridos para el rol y su aplicación práctica en el desempeño de funciones. Evalúa la actualización y profundidad del conocimiento.',
       },
       {
         id: 'herramientas',
         name: 'Manejo de herramientas y equipos',
-        description: 'Competencia en el uso correcto y eficiente de herramientas y equipos necesarios para el trabajo. Evalúa el dominio operativo de los sistemas.'
+        description:
+          'Competencia en el uso correcto y eficiente de herramientas y equipos necesarios para el trabajo. Evalúa el dominio operativo de los sistemas.',
       },
     ],
   },
@@ -46,17 +52,20 @@ export const DIMENSIONS: Dimension[] = [
       {
         id: 'responsabilidad',
         name: 'Responsabilidad y Compromiso',
-        description: 'Capacidad de asumir responsabilidades y cumplir con compromisos adquiridos. Evalúa la puntualidad, dedicación y cumplimiento de objetivos.'
+        description:
+          'Capacidad de asumir responsabilidades y cumplir con compromisos adquiridos. Evalúa la puntualidad, dedicación y cumplimiento de objetivos.',
       },
       {
         id: 'colaboracion',
         name: 'Colaboración y respeto interpersonal',
-        description: 'Disposición a trabajar en equipo y el respeto hacia los demás. Evalúa la comunicación efectiva, empatía y apoyo a colegas.'
+        description:
+          'Disposición a trabajar en equipo y el respeto hacia los demás. Evalúa la comunicación efectiva, empatía y apoyo a colegas.',
       },
       {
         id: 'proactividad',
         name: 'Proactividad y orientación a la mejora',
-        description: 'Iniciativa para mejorar procesos y buscar soluciones innovadoras. Evalúa la capacidad de anticiparse a problemas y proponer mejoras continuas.'
+        description:
+          'Iniciativa para mejorar procesos y buscar soluciones innovadoras. Evalúa la capacidad de anticiparse a problemas y proponer mejoras continuas.',
       },
     ],
   },
@@ -73,11 +82,51 @@ export const SCORE_LABELS: Record<number, string> = {
 };
 
 export const MOCK_PEOPLE: Person[] = [
-  { id: 'p1', name: 'Carlos Rodríguez', legajo: '12345', proyecto: 'LAJE', area: 'Operaciones', departamento: 'Mantenimiento', provincia: 'Buenos Aires' },
-  { id: 'p2', name: 'María González', legajo: '12346', proyecto: 'HUB NORTE', area: 'Recursos Humanos', departamento: 'Selección', provincia: 'Córdoba' },
-  { id: 'p3', name: 'Juan Pérez', legajo: '12347', proyecto: 'LAJE', area: 'Operaciones', departamento: 'Producción', provincia: 'Santa Fe' },
-  { id: 'p4', name: 'Ana Martínez', legajo: '12348', proyecto: 'CHIVILCOY', area: 'Seguridad', departamento: 'HSE', provincia: 'Buenos Aires' },
-  { id: 'p5', name: 'Roberto Silva', legajo: '12349', proyecto: 'HUB NORTE', area: 'Operaciones', departamento: 'Logística', provincia: 'Mendoza' },
+  {
+    id: 'p1',
+    name: 'Carlos Rodríguez',
+    legajo: '12345',
+    proyecto: 'LAJE',
+    area: 'Operaciones',
+    departamento: 'Mantenimiento',
+    provincia: 'Buenos Aires',
+  },
+  {
+    id: 'p2',
+    name: 'María González',
+    legajo: '12346',
+    proyecto: 'HUB NORTE',
+    area: 'Recursos Humanos',
+    departamento: 'Selección',
+    provincia: 'Córdoba',
+  },
+  {
+    id: 'p3',
+    name: 'Juan Pérez',
+    legajo: '12347',
+    proyecto: 'LAJE',
+    area: 'Operaciones',
+    departamento: 'Producción',
+    provincia: 'Santa Fe',
+  },
+  {
+    id: 'p4',
+    name: 'Ana Martínez',
+    legajo: '12348',
+    proyecto: 'CHIVILCOY',
+    area: 'Seguridad',
+    departamento: 'HSE',
+    provincia: 'Buenos Aires',
+  },
+  {
+    id: 'p5',
+    name: 'Roberto Silva',
+    legajo: '12349',
+    proyecto: 'HUB NORTE',
+    area: 'Operaciones',
+    departamento: 'Logística',
+    provincia: 'Mendoza',
+  },
 ];
 
 export const MOCK_SEGMENTS: Segment[] = [

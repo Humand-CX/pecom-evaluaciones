@@ -1,16 +1,18 @@
-import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
+import { IconClipboardList } from '@material-hu/icons/tabler';
 import Stack from '@material-hu/mui/Stack';
-import Title from '@material-hu/components/design-system/Title';
+
 import StateCard from '@material-hu/components/composed-components/StateCard';
 import Spinner from '@material-hu/components/design-system/ProgressIndicators/Spinner';
-import { IconClipboardList } from '@material-hu/icons/tabler';
+import Title from '@material-hu/components/design-system/Title';
 
-import { DashboardLayout } from '../../../layouts/DashboardLayout';
-import { MOCK_CYCLES } from './constants';
-import { CycleCard } from './components/CycleCard';
 import { useCurrentUser } from '../../../hooks/useCurrentUser';
+import { DashboardLayout } from '../../../layouts/DashboardLayout';
+
+import { CycleCard } from './components/CycleCard';
+import { MOCK_CYCLES } from './constants';
 
 interface Cycle {
   id: string;
@@ -41,7 +43,13 @@ export default function CiclosActivosPage() {
   if (userLoading || cyclesLoading) {
     return (
       <DashboardLayout>
-        <Stack sx={{ alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+        <Stack
+          sx={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '400px',
+          }}
+        >
           <Spinner />
         </Stack>
       </DashboardLayout>
@@ -78,7 +86,8 @@ export default function CiclosActivosPage() {
             slotProps={{
               title: {
                 title: 'No tenés ciclos asignados',
-                description: 'Cuando se abra un ciclo de evaluación, vas a verlo acá.',
+                description:
+                  'Cuando se abra un ciclo de evaluación, vas a verlo acá.',
                 variant: 'M',
               },
               avatar: {

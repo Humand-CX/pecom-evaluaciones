@@ -2,11 +2,12 @@ import { Navigate } from 'react-router-dom';
 
 import Stack from '@material-hu/mui/Stack';
 import Typography from '@material-hu/mui/Typography';
+
 import Button from '@material-hu/components/design-system/Buttons/Button';
 import Spinner from '@material-hu/components/design-system/ProgressIndicators/Spinner';
 
-import loginBanner from '../../../assets/login-banner.png';
 import humandLogo from '../../../assets/humand.svg';
+import loginBanner from '../../../assets/login-banner.png';
 import { useAuth } from '../../../providers/AuthContext';
 import { humandOAuthService } from '../../../services/humand';
 
@@ -14,7 +15,13 @@ export default function LoginPage() {
   const { user, loading } = useAuth();
 
   if (loading) return <Spinner />;
-  if (user) return <Navigate to="/" replace />;
+  if (user)
+    return (
+      <Navigate
+        to="/"
+        replace
+      />
+    );
 
   const handleHumandLogin = () => {
     const loginUrl = humandOAuthService.getLoginUrl();
@@ -22,7 +29,9 @@ export default function LoginPage() {
   };
 
   return (
-    <Stack sx={{ minHeight: '100vh', flexDirection: { xs: 'column', md: 'row' } }}>
+    <Stack
+      sx={{ minHeight: '100vh', flexDirection: { xs: 'column', md: 'row' } }}
+    >
       <Stack
         sx={{
           display: { xs: 'none', md: 'flex' },
@@ -32,14 +41,24 @@ export default function LoginPage() {
           backgroundPosition: 'center',
         }}
       />
-      <Stack sx={{ flex: 1, alignItems: 'center', justifyContent: 'center', p: 4 }}>
+      <Stack
+        sx={{ flex: 1, alignItems: 'center', justifyContent: 'center', p: 4 }}
+      >
         <Stack sx={{ width: 360, gap: 3 }}>
-          <img src={humandLogo} alt="Evaluaciones Pecom" style={{ width: 120 }} />
+          <img
+            src={humandLogo}
+            alt="Evaluaciones Pecom"
+            style={{ width: 120 }}
+          />
 
           <Typography variant="h5">Iniciar sesión</Typography>
 
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Inicia sesión con tu cuenta de Humand para acceder a las evaluaciones.
+          <Typography
+            variant="body2"
+            sx={{ color: 'text.secondary' }}
+          >
+            Inicia sesión con tu cuenta de Humand para acceder a las
+            evaluaciones.
           </Typography>
 
           <Button

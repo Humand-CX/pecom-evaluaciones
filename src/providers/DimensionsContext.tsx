@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+
 import { DIMENSIONS } from '../pages/Evaluador/MatrizEvaluacion/constants';
 import { type Dimension } from '../pages/Evaluador/MatrizEvaluacion/types';
 
@@ -9,8 +16,17 @@ type DimensionsContextValue = {
   addDimension: (name: string) => void;
   updateDimension: (id: string, name: string) => void;
   deleteDimension: (id: string) => void;
-  addSubDimension: (dimensionId: string, name: string, description?: string) => void;
-  updateSubDimension: (dimensionId: string, subId: string, name: string, description?: string) => void;
+  addSubDimension: (
+    dimensionId: string,
+    name: string,
+    description?: string,
+  ) => void;
+  updateSubDimension: (
+    dimensionId: string,
+    subId: string,
+    name: string,
+    description?: string,
+  ) => void;
   deleteSubDimension: (dimensionId: string, subId: string) => void;
   duplicateDimension: (id: string) => void;
 };
@@ -33,39 +49,71 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
   }, [dimensions]);
 
   const addDimension = (name: string) => {
-    setDimensions(prev => [...prev, { id: crypto.randomUUID(), name, subDimensions: [] }]);
+    setDimensions(prev => [
+      ...prev,
+      { id: crypto.randomUUID(), name, subDimensions: [] },
+    ]);
   };
 
   const updateDimension = (id: string, name: string) => {
-    setDimensions(prev => prev.map(d => d.id === id ? { ...d, name } : d));
+    setDimensions(prev => prev.map(d => (d.id === id ? { ...d, name } : d)));
   };
 
   const deleteDimension = (id: string) => {
     setDimensions(prev => prev.filter(d => d.id !== id));
   };
 
-  const addSubDimension = (dimensionId: string, name: string, description?: string) => {
-    setDimensions(prev => prev.map(d =>
-      d.id === dimensionId
-        ? { ...d, subDimensions: [...d.subDimensions, { id: crypto.randomUUID(), name, description }] }
-        : d,
-    ));
+  const addSubDimension = (
+    dimensionId: string,
+    name: string,
+    description?: string,
+  ) => {
+    setDimensions(prev =>
+      prev.map(d =>
+        d.id === dimensionId
+          ? {
+              ...d,
+              subDimensions: [
+                ...d.subDimensions,
+                { id: crypto.randomUUID(), name, description },
+              ],
+            }
+          : d,
+      ),
+    );
   };
 
-  const updateSubDimension = (dimensionId: string, subId: string, name: string, description?: string) => {
-    setDimensions(prev => prev.map(d =>
-      d.id === dimensionId
-        ? { ...d, subDimensions: d.subDimensions.map(sd => sd.id === subId ? { ...sd, name, description } : sd) }
-        : d,
-    ));
+  const updateSubDimension = (
+    dimensionId: string,
+    subId: string,
+    name: string,
+    description?: string,
+  ) => {
+    setDimensions(prev =>
+      prev.map(d =>
+        d.id === dimensionId
+          ? {
+              ...d,
+              subDimensions: d.subDimensions.map(sd =>
+                sd.id === subId ? { ...sd, name, description } : sd,
+              ),
+            }
+          : d,
+      ),
+    );
   };
 
   const deleteSubDimension = (dimensionId: string, subId: string) => {
-    setDimensions(prev => prev.map(d =>
-      d.id === dimensionId
-        ? { ...d, subDimensions: d.subDimensions.filter(sd => sd.id !== subId) }
-        : d,
-    ));
+    setDimensions(prev =>
+      prev.map(d =>
+        d.id === dimensionId
+          ? {
+              ...d,
+              subDimensions: d.subDimensions.filter(sd => sd.id !== subId),
+            }
+          : d,
+      ),
+    );
   };
 
   const duplicateDimension = (id: string) => {
@@ -86,7 +134,18 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <DimensionsContext.Provider value={{ dimensions, addDimension, updateDimension, deleteDimension, addSubDimension, updateSubDimension, deleteSubDimension, duplicateDimension }}>
+    <DimensionsContext.Provider
+      value={{
+        dimensions,
+        addDimension,
+        updateDimension,
+        deleteDimension,
+        addSubDimension,
+        updateSubDimension,
+        deleteSubDimension,
+        duplicateDimension,
+      }}
+    >
       {children}
     </DimensionsContext.Provider>
   );
@@ -94,6 +153,7 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
 
 export const useDimensions = () => {
   const ctx = useContext(DimensionsContext);
-  if (!ctx) throw new Error('useDimensions must be used within DimensionsProvider');
+  if (!ctx)
+    throw new Error('useDimensions must be used within DimensionsProvider');
   return ctx;
 };

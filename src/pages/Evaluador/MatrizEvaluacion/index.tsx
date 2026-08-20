@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import Stack from '@material-hu/mui/Stack';
-import Typography from '@material-hu/mui/Typography';
-import Divider from '@material-hu/mui/Divider';
-import Tooltip from '@material-hu/mui/Tooltip';
 import { IconInfoCircle } from '@material-hu/icons/tabler';
+import Divider from '@material-hu/mui/Divider';
+import Stack from '@material-hu/mui/Stack';
+import Tooltip from '@material-hu/mui/Tooltip';
+import Typography from '@material-hu/mui/Typography';
 
-import { useDialogLayer } from '@material-hu/components/layers/Dialogs';
 import Button from '@material-hu/components/design-system/Buttons/Button';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 import Pills from '@material-hu/components/design-system/Pills';
 import Title from '@material-hu/components/design-system/Title';
+import { useDialogLayer } from '@material-hu/components/layers/Dialogs';
 
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
 import { useDimensions } from '../../../providers/DimensionsContext';
@@ -38,9 +38,10 @@ export default function MatrizEvaluacionPage() {
   const allDimensions = dimensions.length > 0 ? dimensions : DIMENSIONS;
 
   // Filter dimensions by cycle's dimensionIds
-  const activeD = cycle.dimensionIds && cycle.dimensionIds.length > 0
-    ? allDimensions.filter(d => cycle.dimensionIds.includes(d.id))
-    : allDimensions;
+  const activeD =
+    cycle.dimensionIds && cycle.dimensionIds.length > 0
+      ? allDimensions.filter(d => cycle.dimensionIds.includes(d.id))
+      : allDimensions;
 
   const subDimensions = activeD.flatMap(d => d.subDimensions);
 
@@ -60,7 +61,11 @@ export default function MatrizEvaluacionPage() {
   const [scores, setScores] = useState<ScoreMatrix>(initScores);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleScoreChange = (personId: string, subDimId: string, value: ScoreValue) => {
+  const handleScoreChange = (
+    personId: string,
+    subDimId: string,
+    value: ScoreValue,
+  ) => {
     setScores(prev => ({
       ...prev,
       [personId]: { ...prev[personId], [subDimId]: value },
@@ -105,27 +110,49 @@ export default function MatrizEvaluacionPage() {
             description={`${formatDate(cycle.start_date)} — ${formatDate(cycle.end_date)}`}
             variant="L"
           />
-          <Pills label={statusConfig.label} type={statusConfig.type} size="small" />
+          <Pills
+            label={statusConfig.label}
+            type={statusConfig.type}
+            size="small"
+          />
         </Stack>
 
         {submitted && (
-          <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 600 }}>
-            Evaluación enviada correctamente. Los puntajes están en modo lectura.
+          <Typography
+            variant="body2"
+            sx={{ color: 'success.main', fontWeight: 600 }}
+          >
+            Evaluación enviada correctamente. Los puntajes están en modo
+            lectura.
           </Typography>
         )}
 
         {activeD.map(dim =>
           dim.subDimensions.map(sd => (
-            <CardContainer key={sd.id} padding={16} sx={{ width: '100%' }}>
+            <CardContainer
+              key={sd.id}
+              padding={16}
+              sx={{ width: '100%' }}
+            >
               <Stack sx={{ gap: 2 }}>
                 <Stack sx={{ gap: 0.5 }}>
                   <Typography
                     variant="caption"
-                    sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.5 }}
+                    sx={{
+                      color: 'text.secondary',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
+                    }}
                   >
                     {dim.name}
                   </Typography>
-                  <Stack sx={{ flexDirection: 'row', alignItems: 'flex-start', gap: 1 }}>
+                  <Stack
+                    sx={{
+                      flexDirection: 'row',
+                      alignItems: 'flex-start',
+                      gap: 1,
+                    }}
+                  >
                     <Typography variant="subtitle1">{sd.name}</Typography>
                     {sd.description && (
                       <Tooltip
@@ -134,7 +161,14 @@ export default function MatrizEvaluacionPage() {
                         placement="top"
                         sx={{ cursor: 'help' }}
                       >
-                        <IconInfoCircle size={18} style={{ marginTop: '2px', flexShrink: 0, opacity: 0.6 }} />
+                        <IconInfoCircle
+                          size={18}
+                          style={{
+                            marginTop: '2px',
+                            flexShrink: 0,
+                            opacity: 0.6,
+                          }}
+                        />
                       </Tooltip>
                     )}
                   </Stack>
@@ -157,7 +191,10 @@ export default function MatrizEvaluacionPage() {
                     >
                       <Stack sx={{ gap: 0.25, minWidth: 0, flex: 1 }}>
                         <Typography variant="body2">{person.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                        >
                           {person.legajo}
                         </Typography>
                       </Stack>
@@ -174,7 +211,9 @@ export default function MatrizEvaluacionPage() {
           )),
         )}
 
-        <Stack sx={{ flexDirection: 'row', gap: 2, justifyContent: 'flex-end' }}>
+        <Stack
+          sx={{ flexDirection: 'row', gap: 2, justifyContent: 'flex-end' }}
+        >
           <Button
             variant="secondary"
             size="large"
