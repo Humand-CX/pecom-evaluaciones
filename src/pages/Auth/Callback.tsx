@@ -16,13 +16,6 @@ export const AuthCallbackPage = () => {
     const handleCallback = async () => {
       try {
         const code = searchParams.get('code');
-        const state = searchParams.get('state');
-        const storedState = localStorage.getItem('oauth_state');
-
-        // Validate state
-        if (!state || state !== storedState) {
-          throw new Error('Invalid state parameter');
-        }
 
         if (!code) {
           throw new Error('No authorization code received');
