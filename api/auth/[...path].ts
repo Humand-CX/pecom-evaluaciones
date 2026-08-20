@@ -36,12 +36,12 @@ async function handleCallback(req: VercelRequest, res: VercelResponse) {
   const code = req.query.code as string | undefined;
   const codeVerifier = req.query.code_verifier as string | undefined;
 
-  if (!code || !codeVerifier) {
-    return res.redirect('/error?reason=missing_params');
+  if (!code) {
+    return res.redirect('/error?reason=missing_code');
   }
 
   try {
-    const tokens = await exchangeCode(code, codeVerifier);
+    const tokens = await exchangeCode(code, codeVerifier || '');
     const cookies = buildTokenCookies(tokens);
     res.setHeader('Set-Cookie', cookies);
     return res.redirect('/');
