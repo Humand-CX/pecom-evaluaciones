@@ -18,15 +18,16 @@ interface Cycle {
   id: string;
   name: string;
   description?: string;
-  status: 'active' | 'pending' | 'completed';
+  status: string;
   startDate?: string;
   endDate?: string;
+  [key: string]: any;
 }
 
 export default function CiclosActivosPage() {
   const navigate = useNavigate();
   const { user, loading: userLoading, error: userError } = useCurrentUser();
-  const [cycles, setCycles] = useState<Cycle[]>(MOCK_CYCLES);
+  const [cycles] = useState<Cycle[]>(MOCK_CYCLES);
   const [cyclesLoading, setCyclesLoading] = useState(false);
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function CiclosActivosPage() {
       setCyclesLoading(false);
       // setCycles(datosDesdeSupabase);
     }, 500);
-  }, [user?.userId]);
+  }, []);
 
   if (userLoading || cyclesLoading) {
     return (

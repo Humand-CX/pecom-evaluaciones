@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
-// @ts-expect-error - xlsx package
 import * as XLSX from 'xlsx';
 import {
   IconAlertCircle,
