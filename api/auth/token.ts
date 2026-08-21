@@ -46,10 +46,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await tokenResponse.json();
 
-    // Return tokens to frontend
+    // Set HttpOnly cookies with tokens
+    const accessTokenCookie = `hu_access_token=${data.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${data.expires_in}`;
+    const refreshTokenCookie = `hu_refresh_token=${data.refresh_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}`;
+
+    res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
+
+    // Return success to frontend (tokens are in cookies now)
     return res.status(200).json({
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
+      ok: true,
       expiresIn: data.expires_in,
     });
   } catch (error) {
