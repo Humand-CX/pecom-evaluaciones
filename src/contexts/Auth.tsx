@@ -26,7 +26,7 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 async function fetchMe(): Promise<User> {
-  const res = await fetch('/api/auth/me');
+  const res = await fetch('/api/auth/me', { credentials: 'include' });
   if (!res.ok) throw new Error('Unauthenticated');
   return res.json();
 }
