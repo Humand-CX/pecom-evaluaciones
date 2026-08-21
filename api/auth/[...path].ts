@@ -54,9 +54,14 @@ async function handleCallback(req: VercelRequest, res: VercelResponse) {
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
 
 async function handleMe(req: VercelRequest, res: VercelResponse) {
+  console.log('Auth /me: Headers:', req.headers);
+  console.log('Auth /me: Cookie header:', req.headers.cookie);
+
   const session = await resolveSession(req);
+  console.log('Auth /me: Resolved session:', session);
 
   if (!session) {
+    console.log('Auth /me: No session found, returning 401');
     return res.status(401).json({ error: 'Unauthenticated' });
   }
 
