@@ -5,13 +5,12 @@ import CircularProgress from '@material-hu/mui/CircularProgress';
 import Stack from '@material-hu/mui/Stack';
 import Typography from '@material-hu/mui/Typography';
 
-import { useUser } from '../../providers/UserContext';
-import { humandOAuthService, humandUsersService } from '../../services/humand';
+import { useAuth } from '../../contexts/Auth';
 
 export const AuthCallbackPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setUser } = useUser();
+  const { getMe } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,37 +30,26 @@ export const AuthCallbackPage = () => {
         });
 
         if (!tokenResponse.ok) {
-          throw new Error('Failed to exchange code for token');
+          const errorData = await tokenResponse.json();
+          throw new Error(errorData.error || 'Failed to exchange code for token');
         }
 
-        const { accessToken, refreshToken, expiresIn } =
-          await tokenResponse.json();
-
-        // Store tokens
-        humandOAuthService.storeTokens(accessToken, refreshToken, expiresIn);
-
-        // Get current user info
-        const humandUser = await humandUsersService.getCurrentUser(accessToken);
-
-        // Update UserContext with real user data
-        setUser({
-          id: humandUser.employeeInternalId,
-          email: humandUser.email,
-          name: humandUser.fullName,
-          role: determineRole(humandUser.email),
-        });
+        // Tokens are now stored in HttpOnly cookies by the backend
+        // Refresh auth state to fetch user data from /api/auth/me
+        await getMe();
 
         // Redirect to dashboard
         navigate('/evaluador/ciclos');
       } catch (err) {
+        console.error('Auth callback error:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
         // Redirect to login after 3 seconds
-        setTimeout(() => navigate('/login'), 3000);
+        setTimeout(() => navigate('/error'), 3000);
       }
     };
 
     handleCallback();
-  }, [searchParams, setUser, navigate]);
+  }, [searchParams, getMe, navigate]);
 
   if (error) {
     return (
