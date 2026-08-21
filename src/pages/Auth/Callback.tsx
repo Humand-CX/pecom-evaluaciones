@@ -17,28 +17,37 @@ export const AuthCallbackPage = () => {
     const handleCallback = async () => {
       try {
         const code = searchParams.get('code');
+        console.log('Callback: Extracted code from URL:', { code, params: Object.fromEntries(searchParams) });
 
         if (!code) {
           throw new Error('No authorization code received');
         }
 
+        console.log('Callback: Exchanging code for token...');
         // Exchange code for token via backend endpoint
         const tokenResponse = await fetch('/api/auth/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code }),
+          credentials: 'include',
         });
 
+        console.log('Callback: Token response status:', tokenResponse.status);
         if (!tokenResponse.ok) {
           const errorData = await tokenResponse.json();
           throw new Error(errorData.error || 'Failed to exchange code for token');
         }
 
+        const tokenData = await tokenResponse.json();
+        console.log('Callback: Token exchange successful:', tokenData);
+
         // Tokens are now stored in HttpOnly cookies by the backend
         // Refresh auth state to fetch user data from /api/auth/me
+        console.log('Callback: Calling getMe()...');
         await getMe();
 
         // Redirect to dashboard
+        console.log('Callback: Redirecting to /evaluador/ciclos');
         navigate('/evaluador/ciclos');
       } catch (err) {
         console.error('Auth callback error:', err);
