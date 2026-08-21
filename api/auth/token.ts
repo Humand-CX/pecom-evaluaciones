@@ -1,4 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import { buildTokenCookies } from './_lib.js';
 
 const CLIENT_ID = process.env.VITE_HUMAND_CLIENT_ID;
 const CLIENT_SECRET = process.env.HUMAND_CLIENT_SECRET;
@@ -46,11 +47,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await tokenResponse.json();
 
-    // Set HttpOnly cookies with tokens
-    const accessTokenCookie = `hu_access_token=${data.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${data.expires_in}`;
-    const refreshTokenCookie = `hu_refresh_token=${data.refresh_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}`;
+    // Set HttpOnly cookies using buildTokenCookies
+    const cookies = buildTokenCookies({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_in: data.expires_in,
+    });
 
-    res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
+    res.setHeader('Set-Cookie', cookies);
 
     // Return success to frontend (tokens are in cookies now)
     return res.status(200).json({
