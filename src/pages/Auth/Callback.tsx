@@ -43,9 +43,9 @@ export const AuthCallbackPage = () => {
         const tokenData = await tokenResponse.json();
         console.log('Callback: Token exchange successful:', tokenData);
 
-        // Invalidate React Query cache for /api/auth/me
-        await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-        console.log('Callback: Invalidated auth cache');
+        // Clear React Query cache completely
+        await queryClient.resetQueries({ queryKey: ['auth', 'me'] });
+        console.log('Callback: Reset auth cache');
 
         // Tokens are now stored in HttpOnly cookies by the backend
         // Refresh auth state to fetch user data from /api/auth/me
