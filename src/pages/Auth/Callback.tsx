@@ -48,9 +48,14 @@ export const AuthCallbackPage = () => {
         console.log('Callback: Reset auth cache');
 
         // Tokens are now stored in HttpOnly cookies by the backend
-        // Refresh auth state to fetch user data from /api/auth/me
-        console.log('Callback: Calling getMe()...');
-        await getMe();
+        // Fetch user data directly to bypass cache
+        console.log('Callback: Fetching user data from /api/auth/me...');
+        const meResponse = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!meResponse.ok) {
+          throw new Error('Failed to fetch user data: ' + meResponse.status);
+        }
+        const userData = await meResponse.json();
+        console.log('Callback: User data fetched:', userData);
 
         // Redirect to dashboard
         console.log('Callback: Redirecting to /evaluador/ciclos');

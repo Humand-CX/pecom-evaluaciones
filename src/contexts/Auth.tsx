@@ -37,11 +37,15 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     queryKey: ['auth', 'me'],
     queryFn: fetchMe,
     retry: false,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const getMe = useCallback(async () => {
-    await queryClient.refetchQueries({ queryKey: ['auth', 'me'] });
+    await queryClient.refetchQueries({
+      queryKey: ['auth', 'me'],
+      type: 'all',
+      exact: true,
+    });
   }, [queryClient]);
 
   const refresh = useCallback(async () => {
