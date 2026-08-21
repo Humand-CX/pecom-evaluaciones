@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 import CircularProgress from '@material-hu/mui/CircularProgress';
 import Stack from '@material-hu/mui/Stack';
@@ -11,6 +12,7 @@ export const AuthCallbackPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getMe } = useAuth();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,6 +42,10 @@ export const AuthCallbackPage = () => {
 
         const tokenData = await tokenResponse.json();
         console.log('Callback: Token exchange successful:', tokenData);
+
+        // Invalidate React Query cache for /api/auth/me
+        await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+        console.log('Callback: Invalidated auth cache');
 
         // Tokens are now stored in HttpOnly cookies by the backend
         // Refresh auth state to fetch user data from /api/auth/me
