@@ -21,7 +21,6 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import AuthErrorPage from "./components/Auth/AuthError";
 
 const LoginPage = lazy(() => import('./pages/Auth/Login'));
-const AuthCallbackPage = lazy(() => import('./pages/Auth/Callback'));
 const CiclosActivosPage = lazy(() => import('./pages/Evaluador/CiclosActivos'));
 const MatrizEvaluacionPage = lazy(
   () => import('./pages/Evaluador/MatrizEvaluacion'),
@@ -73,10 +72,6 @@ const App = () => {
                               <Route
                                 path="/login"
                                 element={<LoginPage />}
-                              />
-                              <Route
-                                path="/auth/callback"
-                                element={<AuthCallbackPage />}
                               />
                               <Route
                                 path="/"
