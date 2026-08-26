@@ -7,7 +7,7 @@ import {
   parseCookies,
   refreshTokens,
   resolveSession,
-} from './_lib.js';
+} from './_lib';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const segments = (req.query.path ?? req.query['...path']) as
