@@ -8,7 +8,7 @@ import StateCard from '@material-hu/components/composed-components/StateCard';
 import Spinner from '@material-hu/components/design-system/ProgressIndicators/Spinner';
 import Title from '@material-hu/components/design-system/Title';
 
-import { useCurrentUser } from '../../../hooks/useCurrentUser';
+import { useUser } from '../../../providers/UserContext';
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
 
 import { CycleCard } from './components/CycleCard';
@@ -26,7 +26,7 @@ interface Cycle {
 
 export default function CiclosActivosPage() {
   const navigate = useNavigate();
-  const { user, loading: userLoading, error: userError } = useCurrentUser();
+  const { user } = useUser();
   const [cycles] = useState<Cycle[]>(MOCK_CYCLES);
   const [cyclesLoading, setCyclesLoading] = useState(false);
 
@@ -41,7 +41,7 @@ export default function CiclosActivosPage() {
     }, 500);
   }, []);
 
-  if (userLoading || cyclesLoading) {
+  if (cyclesLoading) {
     return (
       <DashboardLayout>
         <Stack
@@ -66,23 +66,7 @@ export default function CiclosActivosPage() {
           variant="L"
         />
 
-        {userError && (
-          <StateCard
-            slotProps={{
-              title: {
-                title: 'Error',
-                description: userError,
-                variant: 'M',
-              },
-              avatar: {
-                Icon: IconClipboardList,
-                color: 'error',
-              },
-            }}
-          />
-        )}
-
-        {cycles.length === 0 && !userError && (
+        {cycles.length === 0 && (
           <StateCard
             slotProps={{
               title: {
