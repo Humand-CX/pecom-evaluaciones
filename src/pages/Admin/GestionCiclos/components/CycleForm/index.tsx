@@ -1,8 +1,14 @@
+import { useState } from 'react';
+
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Checkbox from '@material-hu/mui/Checkbox';
+import FormControl from '@material-hu/mui/FormControl';
 import FormControlLabel from '@material-hu/mui/FormControlLabel';
+import InputLabel from '@material-hu/mui/InputLabel';
+import MenuItem from '@material-hu/mui/MenuItem';
+import Select from '@material-hu/mui/Select';
 import Stack from '@material-hu/mui/Stack';
 import Typography from '@material-hu/mui/Typography';
 
@@ -10,7 +16,10 @@ import CardContainer from '@material-hu/components/design-system/CardContainer';
 import FormInputClassic from '@material-hu/components/design-system/Inputs/Classic/form';
 
 import { useDimensions } from '../../../../../providers/DimensionsContext';
-import { useSegments } from '../../../../../providers/SegmentsContext';
+import {
+  useSegmentationGroups,
+  useSegmentationItems,
+} from '../../../../../hooks/useHumandSegmentation';
 import { type CycleFormValues, cycleSchema } from '../../schema';
 
 type CycleFormProps = {
@@ -25,7 +34,9 @@ export const CycleForm = ({
   defaultValues,
 }: CycleFormProps) => {
   const { dimensions } = useDimensions();
-  const { segments } = useSegments();
+  const { groups } = useSegmentationGroups();
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const { items, loading: itemsLoading } = useSegmentationItems(selectedGroupId);
 
   const methods = useForm<CycleFormValues>({
     resolver: zodResolver(cycleSchema),
@@ -128,36 +139,75 @@ export const CycleForm = ({
               <Typography variant="subtitle2">
                 Segmentos de Personas*
               </Typography>
+
+              <FormControl
+                fullWidth
+                size="small"
+              >
+                <InputLabel>Grupo de segmentación</InputLabel>
+                <Select
+                  label="Grupo de segmentación"
+                  value={selectedGroupId ?? ''}
+                  onChange={e => setSelectedGroupId(Number(e.target.value))}
+                >
+                  {groups.map(group => (
+                    <MenuItem
+                      key={group.id}
+                      value={group.id}
+                    >
+                      {group.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               <Controller
                 name="segmentIds"
                 control={control}
                 render={({ field }) => (
                   <Stack sx={{ gap: 1 }}>
-                    {segments.length === 0 ? (
+                    {selectedGroupId == null ? (
                       <Typography
                         variant="caption"
                         sx={{ color: 'text.secondary' }}
                       >
-                        No hay segmentos disponibles.
+                        Elegí un grupo de segmentación para ver sus opciones.
+                      </Typography>
+                    ) : itemsLoading ? (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'text.secondary' }}
+                      >
+                        Cargando...
+                      </Typography>
+                    ) : items.length === 0 ? (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'text.secondary' }}
+                      >
+                        Este grupo no tiene opciones.
                       </Typography>
                     ) : (
-                      segments.map(segment => (
-                        <FormControlLabel
-                          key={segment.id}
-                          control={
-                            <Checkbox
-                              checked={field.value.includes(segment.id)}
-                              onChange={e => {
-                                const newValue = e.target.checked
-                                  ? [...field.value, segment.id]
-                                  : field.value.filter(id => id !== segment.id);
-                                field.onChange(newValue);
-                              }}
-                            />
-                          }
-                          label={segment.name}
-                        />
-                      ))
+                      items.map(item => {
+                        const itemId = String(item.id);
+                        return (
+                          <FormControlLabel
+                            key={itemId}
+                            control={
+                              <Checkbox
+                                checked={field.value.includes(itemId)}
+                                onChange={e => {
+                                  const newValue = e.target.checked
+                                    ? [...field.value, itemId]
+                                    : field.value.filter(id => id !== itemId);
+                                  field.onChange(newValue);
+                                }}
+                              />
+                            }
+                            label={item.name}
+                          />
+                        );
+                      })
                     )}
                   </Stack>
                 )}
