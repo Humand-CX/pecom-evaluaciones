@@ -1,12 +1,9 @@
 import { useState } from 'react';
 
-import FormControl from '@material-hu/mui/FormControl';
+import Autocomplete from '@material-hu/mui/Autocomplete';
 import FormControlLabel from '@material-hu/mui/FormControlLabel';
-import InputLabel from '@material-hu/mui/InputLabel';
-import MenuItem from '@material-hu/mui/MenuItem';
 import Radio from '@material-hu/mui/Radio';
 import RadioGroup from '@material-hu/mui/RadioGroup';
-import Select from '@material-hu/mui/Select';
 import Stack from '@material-hu/mui/Stack';
 import TextField from '@material-hu/mui/TextField';
 import Typography from '@material-hu/mui/Typography';
@@ -16,6 +13,7 @@ import CardContainer from '@material-hu/components/design-system/CardContainer';
 
 import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
 import {
+  type HumandUser,
   useHumandUsers,
   useSegmentMembers,
 } from '../../../hooks/useHumandSegmentation';
@@ -28,8 +26,7 @@ type EvaluatorAssignmentModalProps = {
   onSuccess: () => void;
 };
 
-const fullName = (u: { firstName: string; lastName: string }) =>
-  `${u.firstName} ${u.lastName}`.trim();
+const fullName = (u: HumandUser) => `${u.firstName} ${u.lastName}`.trim();
 
 export const EvaluatorAssignmentModal = ({
   cycle,
@@ -38,12 +35,15 @@ export const EvaluatorAssignmentModal = ({
   const { addBulkAssignments } = useEvaluatorAssignments();
 
   const [mode, setMode] = useState<'manual' | 'masivo'>('manual');
-  const [selectedEvaluator, setSelectedEvaluator] = useState('');
+  const [selectedEvaluator, setSelectedEvaluator] = useState<HumandUser | null>(
+    null,
+  );
   const [evaluatorSearch, setEvaluatorSearch] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { members: cyclePersons } = useSegmentMembers(cycle.segmentIds);
-  const { users: evaluatorOptions } = useHumandUsers(evaluatorSearch);
+  const { users: evaluatorOptions, loading: evaluatorsLoading } =
+    useHumandUsers(evaluatorSearch);
 
   const handleManualAssign = async () => {
     if (!selectedEvaluator) return;
@@ -56,10 +56,10 @@ export const EvaluatorAssignmentModal = ({
       cyclePersons.forEach(person => {
         cycle.dimensionIds.forEach(dimensionId => {
           assignments.push({
-            id: `${cycle.id}-${dimensionId}-${selectedEvaluator}-${person.id}`,
+            id: `${cycle.id}-${dimensionId}-${selectedEvaluator.id}-${person.id}`,
             cycleId: cycle.id,
             dimensionId,
-            evaluatorId: selectedEvaluator,
+            evaluatorId: String(selectedEvaluator.id),
             personId: String(person.id),
           });
         });
@@ -111,31 +111,24 @@ export const EvaluatorAssignmentModal = ({
               {cycle.dimensionIds.length} dimensiones
             </Typography>
 
-            <TextField
-              label="Buscar evaluador"
-              placeholder="Nombre, apellido o email"
-              value={evaluatorSearch}
-              onChange={e => setEvaluatorSearch(e.target.value)}
+            <Autocomplete
+              options={evaluatorOptions}
+              getOptionLabel={fullName}
+              isOptionEqualToValue={(a, b) => a.id === b.id}
+              value={selectedEvaluator}
+              onChange={(_, value) => setSelectedEvaluator(value)}
+              inputValue={evaluatorSearch}
+              onInputChange={(_, value) => setEvaluatorSearch(value)}
+              loading={evaluatorsLoading}
+              renderInput={params => (
+                <TextField
+                  {...params}
+                  label="Evaluador*"
+                  placeholder="Nombre, apellido o email"
+                />
+              )}
               fullWidth
             />
-
-            <FormControl fullWidth>
-              <InputLabel>Evaluador*</InputLabel>
-              <Select
-                value={selectedEvaluator}
-                onChange={e => setSelectedEvaluator(e.target.value)}
-                label="Evaluador*"
-              >
-                {evaluatorOptions.map(evaluator => (
-                  <MenuItem
-                    key={evaluator.id}
-                    value={String(evaluator.id)}
-                  >
-                    {fullName(evaluator)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
 
             <Button
               variant="primary"

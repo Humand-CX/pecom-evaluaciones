@@ -121,6 +121,37 @@ export function useHumandUsers(search: string) {
   return { users, loading };
 }
 
+export function useUserNames(userIds: string[]) {
+  const [names, setNames] = useState<Record<string, string>>({});
+  const key = [...new Set(userIds)].sort().join(',');
+
+  useEffect(() => {
+    if (!key) {
+      setNames({});
+      return;
+    }
+    let cancelled = false;
+    postgrest
+      .get<HumandUser>('users', {
+        id: `in.(${key})`,
+        select: 'id,firstName,lastName',
+      })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const map: Record<string, string> = {};
+        data.forEach(u => {
+          map[String(u.id)] = `${u.firstName} ${u.lastName}`.trim();
+        });
+        setNames(map);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+
+  return names;
+}
+
 export function useSegmentationItems(groupId: number | null) {
   const [items, setItems] = useState<SegmentationItem[]>([]);
   const [loading, setLoading] = useState(false);

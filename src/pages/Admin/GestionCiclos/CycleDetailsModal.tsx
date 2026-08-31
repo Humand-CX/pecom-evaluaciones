@@ -15,22 +15,24 @@ import TableRow from '@material-hu/components/design-system/Table/components/Tab
 
 import { useDimensions } from '../../../providers/DimensionsContext';
 import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
-import { useSegments } from '../../../providers/SegmentsContext';
-import { type Cycle } from '../../Evaluador/CiclosActivos/types';
 import {
-  DIMENSIONS,
-  MOCK_PEOPLE,
-} from '../../Evaluador/MatrizEvaluacion/constants';
+  useSegmentMembers,
+  useUserNames,
+} from '../../../hooks/useHumandSegmentation';
+import { type Cycle } from '../../Evaluador/CiclosActivos/types';
+import { DIMENSIONS } from '../../Evaluador/MatrizEvaluacion/constants';
 import { MOCK_RESULTS } from '../Resultados/constants';
 
 type CycleDetailsModalProps = {
   cycle: Cycle;
 };
 
+const fullName = (u: { firstName: string; lastName: string }) =>
+  `${u.firstName} ${u.lastName}`.trim();
+
 export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
   const theme = useTheme();
   const { dimensions } = useDimensions();
-  const { segments } = useSegments();
   const { assignments } = useEvaluatorAssignments();
 
   const allDimensions = dimensions.length > 0 ? dimensions : DIMENSIONS;
@@ -42,12 +44,13 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
     0,
   );
 
-  // Get persons from selected segments
-  const cyclePersons = MOCK_PEOPLE.filter(person =>
-    segments
-      .filter(seg => cycle.segmentIds.includes(seg.id))
-      .some(seg => seg.personIds.includes(person.id)),
-  );
+  // Get persons from selected segments (real Humand users)
+  const { members: cyclePersons } = useSegmentMembers(cycle.segmentIds);
+
+  const cycleEvaluatorIds = assignments
+    .filter(a => a.cycleId === cycle.id)
+    .map(a => a.evaluatorId);
+  const evaluatorNames = useUserNames(cycleEvaluatorIds);
 
   // Get all results for this cycle
   const cycleResults = MOCK_RESULTS.filter(r => r.cycleId === cycle.id);
@@ -58,7 +61,7 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
     let totalCompleted = 0;
 
     cyclePersons.forEach(person => {
-      const result = cycleResults.find(r => r.personId === person.id);
+      const result = cycleResults.find(r => r.personId === String(person.id));
       if (result) {
         const completedCount = Object.values(result.scores).filter(
           score => score != null,
@@ -76,15 +79,14 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
 
   // Build table data with evaluators and completion status
   const tableData = cyclePersons.map(person => {
-    const segment = segments.find(seg => seg.personIds.includes(person.id));
     const personAssignments = assignments.filter(
-      a => a.cycleId === cycle.id && a.personId === person.id,
+      a => a.cycleId === cycle.id && a.personId === String(person.id),
     );
     const uniqueEvaluators = [
       ...new Set(personAssignments.map(a => a.evaluatorId)),
     ];
 
-    const result = cycleResults.find(r => r.personId === person.id);
+    const result = cycleResults.find(r => r.personId === String(person.id));
     const completedScores = result
       ? Object.values(result.scores).filter(score => score != null).length
       : 0;
@@ -93,7 +95,6 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
 
     return {
       person,
-      segment: segment?.name || 'Sin segmento',
       evaluators:
         uniqueEvaluators.length > 0 ? uniqueEvaluators : ['Sin asignar'],
       isCompleted,
@@ -169,7 +170,6 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
             <TableHead>
               <TableRow>
                 <TableCell headerCell>Persona</TableCell>
-                <TableCell headerCell>Segmento</TableCell>
                 <TableCell headerCell>Evaluadores Asignados</TableCell>
                 <TableCell headerCell>Estado</TableCell>
               </TableRow>
@@ -179,17 +179,16 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
                 <TableRow key={row.person.id}>
                   <TableCell>
                     <Stack sx={{ gap: 0 }}>
-                      <Typography variant="body2">{row.person.name}</Typography>
+                      <Typography variant="body2">
+                        {fullName(row.person)}
+                      </Typography>
                       <Typography
                         variant="caption"
                         sx={{ color: 'text.secondary' }}
                       >
-                        {row.person.legajo}
+                        {row.person.email}
                       </Typography>
                     </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="caption">{row.segment}</Typography>
                   </TableCell>
                   <TableCell>
                     <Stack sx={{ gap: 0.5 }}>
@@ -198,7 +197,7 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
                           key={idx}
                           variant="caption"
                         >
-                          {evaluator}
+                          {evaluatorNames[evaluator] ?? evaluator}
                         </Typography>
                       ))}
                     </Stack>
@@ -236,7 +235,7 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
             <Typography variant="subtitle2">Resumen</Typography>
             <Stack sx={{ gap: 0.5 }}>
               <Typography variant="caption">
-                <strong>Total de personas:</strong> {MOCK_PEOPLE.length}
+                <strong>Total de personas:</strong> {cyclePersons.length}
               </Typography>
               <Typography variant="caption">
                 <strong>Dimensiones del ciclo:</strong> {cycleDimensions.length}
