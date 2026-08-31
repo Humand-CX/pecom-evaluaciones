@@ -7,8 +7,8 @@ import qs from 'qs'
 dotenv.config({ path: join(process.cwd(), '.env.local'), override: true })
 
 // --- Environment ---
-const CLIENT_ID = process.env.HUMAND_CLIENT_ID!
-const CLIENT_SECRET = process.env.HUMAND_CLIENT_SECRET!
+const CLIENT_ID = process.env.HUMAND_M2M_CLIENT_ID!
+const CLIENT_SECRET = process.env.HUMAND_M2M_CLIENT_SECRET!
 const API_URL = process.env.HUMAND_API_URL!
 const POSTGREST_BASE_URL = process.env.POSTGREST_BASE_URL!
 

@@ -34,3 +34,4 @@ dist-ssr
 
 # PostgREST OpenAPI spec cache (local per developer)
 .cache/
+tsconfig.tsbuildinfo
