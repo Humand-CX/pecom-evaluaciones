@@ -125,7 +125,10 @@ export function parseCookies(req: {
 function decodeJwt(token: string): JwtPayload {
   const payload = token.split('.')[1];
   if (!payload) throw new Error('Invalid JWT');
-  return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as JwtPayload;
+  const binary = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  const json = new TextDecoder('utf-8').decode(bytes);
+  return JSON.parse(json) as JwtPayload;
 }
 
 function isExpired(payload: JwtPayload): boolean {

@@ -51,7 +51,13 @@ export const EvaluatorAssignmentsProvider = ({
   };
 
   const addBulkAssignments = (newAssignments: EvaluatorAssignment[]) => {
-    setAssignments(prev => [...prev, ...newAssignments]);
+    const keyOf = (a: EvaluatorAssignment) =>
+      `${a.cycleId}|${a.dimensionId}|${a.personId}`;
+    const newKeys = new Set(newAssignments.map(keyOf));
+    setAssignments(prev => [
+      ...prev.filter(a => !newKeys.has(keyOf(a))),
+      ...newAssignments,
+    ]);
   };
 
   const deleteAssignment = (id: string) => {

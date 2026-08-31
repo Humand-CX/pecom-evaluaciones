@@ -310,7 +310,7 @@ export const GestionCiclosPage = () => {
                           size="small"
                           onClick={() => handleAssignEvaluators(cycle)}
                         >
-                          Asignar
+                          Asignar evaluadores
                         </Button>
                         <IconButton onClick={e => handleOpenMenu(e, cycle)}>
                           <IconDotsVertical />
