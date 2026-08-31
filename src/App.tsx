@@ -10,7 +10,7 @@ import { DialogLayerProvider } from '@material-hu/components/layers/Dialogs';
 import { DrawerLayerProvider } from '@material-hu/components/layers/Drawers';
 import { MenuLayerProvider } from '@material-hu/components/layers/Menus';
 
-import { useAuth } from './providers/AuthContext';
+import { useAuth } from './contexts/Auth';
 import { DimensionsProvider } from './providers/DimensionsContext';
 import { EvaluatorAssignmentsProvider } from './providers/EvaluatorAssignmentsContext';
 import { SegmentsProvider } from './providers/SegmentsContext';
@@ -33,7 +33,7 @@ const theme = createHuGoTheme();
 const queryClient = new QueryClient();
 
 function ProtectedAdminRoute({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, isLoading: loading } = useAuth();
   const { isAdmin } = useUser();
   if (import.meta.env.DEV) return <>{children}</>;
   if (loading) return null;

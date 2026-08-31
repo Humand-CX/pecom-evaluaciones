@@ -8,11 +8,11 @@ import Spinner from '@material-hu/components/design-system/ProgressIndicators/Sp
 
 import humandLogo from '../../../assets/humand.svg';
 import loginBanner from '../../../assets/login-banner.png';
-import { useAuth } from '../../../providers/AuthContext';
+import { useAuth } from '../../../contexts/Auth';
 import { humandOAuthService } from '../../../services/humand';
 
 export default function LoginPage() {
-  const { user, loading } = useAuth();
+  const { user, isLoading: loading } = useAuth();
 
   if (loading) return <Spinner />;
   if (user)

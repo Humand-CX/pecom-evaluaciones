@@ -19,7 +19,7 @@ import {
 import { type NavSectionProps } from '@material-hu/components/design-system/Sidebar/types';
 
 import humandLogo from '../../assets/humand.svg';
-import { useAuth } from '../../providers/AuthContext';
+import { useAuth } from '../../contexts/Auth';
 
 const SECTIONS: NavSectionProps[] = [
   {
