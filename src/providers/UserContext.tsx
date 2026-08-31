@@ -1,4 +1,6 @@
-import { createContext, type ReactNode, useContext, useState } from 'react';
+import { createContext, type ReactNode, useContext } from 'react';
+
+import { useAuth } from '../contexts/Auth';
 
 export type UserRole = 'admin' | 'evaluator' | 'viewer';
 
@@ -11,7 +13,6 @@ export interface AuthUser {
 
 interface UserContextType {
   user: AuthUser | null;
-  setUser: (user: AuthUser | null) => void;
   isAdmin: boolean;
   isEvaluator: boolean;
   hasEvaluations: boolean; // True si tiene asignaciones como evaluador
@@ -21,30 +22,30 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  // Por ahora usamos usuario hardcodeado para testing
-  // Cuando llegue la API de Humand, traeremos el usuario real
-  const [user, setUser] = useState<AuthUser | null>({
-    id: 'user-1',
-    email: 'sofia.gonzalez@pecomenergia.com.ar',
-    name: 'Sofia González',
-    role: 'admin', // Cambiar a 'evaluator' para testear evaluadores
-  });
+  const { user: authUser, logout: authLogout } = useAuth();
 
-  const logout = () => {
-    setUser(null);
-  };
+  const isAdmin = authUser?.isAdmin ?? false;
+  // TODO: evaluador se define por asignación explícita en Supabase (pendiente de migrar
+  // desde localStorage) — hasta entonces, cualquier usuario logueado no-admin pasa como evaluador.
+  const isEvaluator = !isAdmin;
 
-  // Por ahora asumimos que los evaluadores siempre tienen evaluaciones
-  // Cuando conectemos Humand, verificaremos si tienen asignaciones
-  const hasEvaluations = user?.role === 'evaluator';
+  const user: AuthUser | null = authUser
+    ? {
+        id: authUser.sub,
+        email: authUser.email ?? '',
+        name: authUser.name ?? '',
+        role: isAdmin ? 'admin' : 'evaluator',
+      }
+    : null;
 
   const value: UserContextType = {
     user,
-    setUser,
-    isAdmin: user?.role === 'admin',
-    isEvaluator: user?.role === 'evaluator',
-    hasEvaluations,
-    logout,
+    isAdmin,
+    isEvaluator,
+    hasEvaluations: isEvaluator,
+    logout: () => {
+      void authLogout();
+    },
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

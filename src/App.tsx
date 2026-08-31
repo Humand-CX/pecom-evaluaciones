@@ -58,15 +58,15 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
-        <UserProvider>
-          <DimensionsProvider>
-            <SegmentsProvider>
-              <EvaluatorAssignmentsProvider>
-                <MenuLayerProvider>
-                  <DialogLayerProvider>
-                    <DrawerLayerProvider>
-                      <BrowserRouter>
-                        <AuthProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <UserProvider>
+              <DimensionsProvider>
+                <SegmentsProvider>
+                  <EvaluatorAssignmentsProvider>
+                    <MenuLayerProvider>
+                      <DialogLayerProvider>
+                        <DrawerLayerProvider>
                           <Suspense fallback={null}>
                             <Routes>
                               <Route
@@ -125,15 +125,15 @@ const App = () => {
                             <Route path="/error" element={<AuthErrorPage />} />
         </Routes>
                           </Suspense>
-                        </AuthProvider>
-                      </BrowserRouter>
-                    </DrawerLayerProvider>
-                  </DialogLayerProvider>
-                </MenuLayerProvider>
-              </EvaluatorAssignmentsProvider>
-            </SegmentsProvider>
-          </DimensionsProvider>
-        </UserProvider>
+                        </DrawerLayerProvider>
+                      </DialogLayerProvider>
+                    </MenuLayerProvider>
+                  </EvaluatorAssignmentsProvider>
+                </SegmentsProvider>
+              </DimensionsProvider>
+            </UserProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>
   );

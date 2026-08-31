@@ -8,6 +8,7 @@ import {
   refreshTokens,
   resolveSession,
 } from './_lib.js';
+import { isInstanceAdmin } from '../_postgrest-client.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const segments = (req.query.path ?? req.query['...path']) as
@@ -54,14 +55,9 @@ async function handleCallback(req: VercelRequest, res: VercelResponse) {
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
 
 async function handleMe(req: VercelRequest, res: VercelResponse) {
-  console.log('Auth /me: Headers:', req.headers);
-  console.log('Auth /me: Cookie header:', req.headers.cookie);
-
   const session = await resolveSession(req);
-  console.log('Auth /me: Resolved session:', session);
 
   if (!session) {
-    console.log('Auth /me: No session found, returning 401');
     return res.status(401).json({ error: 'Unauthenticated' });
   }
 
@@ -69,7 +65,11 @@ async function handleMe(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Set-Cookie', session.renewedCookies);
   }
 
-  return res.status(200).json(session.user);
+  const isAdmin = session.user.email
+    ? await isInstanceAdmin(session.user.email)
+    : false;
+
+  return res.status(200).json({ ...session.user, isAdmin });
 }
 
 // ── POST /api/auth/refresh ────────────────────────────────────────────────────
