@@ -7,10 +7,11 @@ import qs from 'qs'
 dotenv.config({ path: join(process.cwd(), '.env.local'), override: true })
 
 // --- Environment ---
-const CLIENT_ID = process.env.HUMAND_CLIENT_ID!
-const CLIENT_SECRET = process.env.HUMAND_CLIENT_SECRET!
+const CLIENT_ID = process.env.HUMAND_M2M_CLIENT_ID!
+const CLIENT_SECRET = process.env.HUMAND_M2M_CLIENT_SECRET!
 const API_URL = process.env.HUMAND_API_URL!
 const POSTGREST_BASE_URL = process.env.POSTGREST_BASE_URL!
+const INSTANCE_ID = process.env.HUMAND_INSTANCE_ID!
 
 // --- Token cache (module-level, survives across warm invocations) ---
 let cachedToken: string | null = null
@@ -29,6 +30,7 @@ async function getToken(): Promise<string> {
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
       audience: 'views-cx',
+      instance_id: INSTANCE_ID,
     }),
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
   )
@@ -47,7 +49,7 @@ function validatePath(path: string): boolean {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (!CLIENT_ID || !CLIENT_SECRET || !API_URL || !POSTGREST_BASE_URL) {
+  if (!CLIENT_ID || !CLIENT_SECRET || !API_URL || !POSTGREST_BASE_URL || !INSTANCE_ID) {
     return res.status(503).json({ error: 'PostgREST proxy configuration error — check your environment variables' })
   }
 
