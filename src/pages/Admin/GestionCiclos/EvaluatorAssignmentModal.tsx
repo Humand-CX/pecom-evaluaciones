@@ -73,7 +73,12 @@ export const EvaluatorAssignmentModal = ({
   };
 
   if (mode === 'masivo') {
-    return <CSVImportModal onImportSuccess={onSuccess} />;
+    return (
+      <CSVImportModal
+        cycle={cycle}
+        onImportSuccess={onSuccess}
+      />
+    );
   }
 
   return (

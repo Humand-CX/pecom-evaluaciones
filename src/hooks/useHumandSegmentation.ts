@@ -41,6 +41,7 @@ export function useSegmentationGroups() {
 export interface HumandUser {
   id: number;
   email: string | null;
+  employeeInternalId: string | null;
   firstName: string;
   lastName: string;
 }
@@ -68,7 +69,7 @@ export function useSegmentMembers(itemIds: string[]) {
         if (userIds.length === 0) return { data: [] as HumandUser[] };
         return postgrest.get<HumandUser>('users', {
           id: `in.(${userIds.join(',')})`,
-          select: 'id,email,firstName,lastName',
+          select: 'id,email,employeeInternalId,firstName,lastName',
           order: 'firstName.asc',
         });
       })

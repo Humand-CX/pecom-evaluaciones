@@ -7,7 +7,6 @@ import {
   IconLock,
   IconPlayerPlay,
   IconPlus,
-  IconUpload,
 } from '@material-hu/icons/tabler';
 import IconButton from '@material-hu/mui/IconButton';
 import Stack from '@material-hu/mui/Stack';
@@ -30,7 +29,6 @@ import { cyclesService, type Cycle as SupabaseCycle } from '../../../services/su
 import { STATUS_CONFIG } from '../../Evaluador/CiclosActivos/constants';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
 
-import { CSVImportModal } from './CSVImportModal';
 import { CycleDetailsModal } from './CycleDetailsModal';
 import { CycleForm } from './components/CycleForm';
 import { EvaluatorAssignmentModal } from './EvaluatorAssignmentModal';
@@ -162,19 +160,6 @@ export const GestionCiclosPage = () => {
     });
   };
 
-  const handleOpenImport = () => {
-    openDrawer({
-      title: 'Importar asignaciones de evaluadores',
-      size: 'medium',
-      children: <CSVImportModal onImportSuccess={closeDrawer} />,
-      primaryButtonProps: { disabled: true },
-      secondaryButtonProps: {
-        children: 'Cerrar',
-        onClick: () => closeDrawer(),
-      },
-    });
-  };
-
   const handleViewDetails = (cycle: Cycle) => {
     openDrawer({
       title: `${cycle.name} - Detalles`,
@@ -247,13 +232,6 @@ export const GestionCiclosPage = () => {
             description="Administrá los ciclos de evaluación"
           />
           <Stack sx={{ flexDirection: 'row', gap: 1 }}>
-            <Button
-              variant="secondary"
-              startIcon={<IconUpload />}
-              onClick={handleOpenImport}
-            >
-              Importar asignaciones
-            </Button>
             <Button
               startIcon={<IconPlus />}
               onClick={handleNew}

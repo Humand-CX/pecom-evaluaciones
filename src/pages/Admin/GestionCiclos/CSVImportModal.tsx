@@ -7,21 +7,20 @@ import Typography from '@material-hu/mui/Typography';
 import Button from '@material-hu/components/design-system/Buttons/Button';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 
-import { useDimensions } from '../../../providers/DimensionsContext';
 import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
+import { useSegmentMembers } from '../../../hooks/useHumandSegmentation';
+import { postgrest } from '../../../services/postgrest';
 import { type EvaluatorAssignment } from '../../../types/evaluatorAssignments';
-import { MOCK_CYCLES } from '../../Evaluador/CiclosActivos/constants';
-import { MOCK_PEOPLE } from '../../Evaluador/MatrizEvaluacion/constants';
+import { type Cycle } from '../../Evaluador/CiclosActivos/types';
 
 type CSVImportModalProps = {
+  cycle: Cycle;
   onImportSuccess: () => void;
 };
 
 type CSVRow = {
-  cycle_id?: string;
-  dimension_id?: string;
-  evaluator_id?: string;
-  person_id?: string;
+  evaluator_internal_id?: string;
+  person_internal_id?: string;
 };
 
 type ValidationError = {
@@ -29,76 +28,63 @@ type ValidationError = {
   message: string;
 };
 
-export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
-  const { addBulkAssignments } = useEvaluatorAssignments();
-  const { dimensions } = useDimensions();
+interface HumandUserLookup {
+  id: number;
+  employeeInternalId: string;
+  firstName: string;
+  lastName: string;
+}
 
-  const [file, setFile] = useState<File | null>(null);
+const parseCSV = (text: string): CSVRow[] => {
+  const lines = text.split('\n').filter(line => line.trim());
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  return lines.slice(1).map(line => {
+    const values = line.split(',').map(v => v.trim());
+    const row: CSVRow = {};
+
+    headers.forEach((header, idx) => {
+      if (header === 'evaluator_internal_id')
+        row.evaluator_internal_id = values[idx];
+      else if (header === 'person_internal_id')
+        row.person_internal_id = values[idx];
+    });
+
+    return row;
+  });
+};
+
+const downloadCsv = (filename: string, content: string) => {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+export const CSVImportModal = ({
+  cycle,
+  onImportSuccess,
+}: CSVImportModalProps) => {
+  const { addBulkAssignments } = useEvaluatorAssignments();
+  const { members: cyclePersons } = useSegmentMembers(cycle.segmentIds);
+
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [preview, setPreview] = useState<CSVRow[]>([]);
+  const [resolved, setResolved] = useState<
+    { evaluator: HumandUserLookup; person: HumandUserLookup }[]
+  >([]);
   const [loading, setLoading] = useState(false);
 
-  const parseCSV = (text: string): CSVRow[] => {
-    const lines = text.split('\n').filter(line => line.trim());
-    if (lines.length < 2) return [];
-
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    return lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim());
-      const row: CSVRow = {};
-
-      headers.forEach((header, idx) => {
-        if (header === 'cycle_id') row.cycle_id = values[idx];
-        else if (header === 'dimension_id') row.dimension_id = values[idx];
-        else if (header === 'evaluator_id') row.evaluator_id = values[idx];
-        else if (header === 'person_id') row.person_id = values[idx];
-      });
-
-      return row;
-    });
-  };
-
-  const validateRows = (
-    rows: CSVRow[],
-  ): { valid: boolean; errors: ValidationError[] } => {
-    const validationErrors: ValidationError[] = [];
-
-    rows.forEach((row, idx) => {
-      const rowNum = idx + 2; // +1 for header, +1 for 1-based indexing
-
-      if (!row.cycle_id) {
-        validationErrors.push({ row: rowNum, message: 'Falta cycle_id' });
-      } else if (!MOCK_CYCLES.find(c => c.id === row.cycle_id)) {
-        validationErrors.push({
-          row: rowNum,
-          message: `Ciclo no encontrado: ${row.cycle_id}`,
-        });
-      }
-
-      if (!row.dimension_id) {
-        validationErrors.push({ row: rowNum, message: 'Falta dimension_id' });
-      } else if (!dimensions.find(d => d.id === row.dimension_id)) {
-        validationErrors.push({
-          row: rowNum,
-          message: `Dimensión no encontrada: ${row.dimension_id}`,
-        });
-      }
-
-      if (!row.evaluator_id) {
-        validationErrors.push({ row: rowNum, message: 'Falta evaluator_id' });
-      }
-
-      if (!row.person_id) {
-        validationErrors.push({ row: rowNum, message: 'Falta person_id' });
-      } else if (!MOCK_PEOPLE.find(p => p.id === row.person_id)) {
-        validationErrors.push({
-          row: rowNum,
-          message: `Persona no encontrada: ${row.person_id}`,
-        });
-      }
-    });
-
-    return { valid: validationErrors.length === 0, errors: validationErrors };
+  const handleDownloadTemplate = () => {
+    const header = 'evaluator_internal_id,person_internal_id';
+    const rows = cyclePersons.map(
+      p => `,${p.employeeInternalId ?? p.id}`,
+    );
+    downloadCsv(`plantilla-${cycle.name}.csv`, [header, ...rows].join('\n'));
   };
 
   const handleFileChange = async (
@@ -107,71 +93,116 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
     const newFile = event.target.files?.[0];
     if (!newFile) return;
 
-    setFile(newFile);
     setErrors([]);
     setPreview([]);
-
-    const text = await newFile.text();
-    const rows = parseCSV(text);
-    setPreview(rows);
-
-    const { errors: validationErrors } = validateRows(rows);
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
-    }
-  };
-
-  const handleImport = async () => {
-    if (!preview.length) return;
-
-    const { valid } = validateRows(preview);
-    if (!valid) return;
-
+    setResolved([]);
     setLoading(true);
 
     try {
-      const assignments: EvaluatorAssignment[] = preview
-        .filter(
-          row =>
-            row.cycle_id &&
-            row.dimension_id &&
-            row.evaluator_id &&
-            row.person_id,
-        )
-        .map(row => ({
-          id: `${row.cycle_id}-${row.dimension_id}-${row.evaluator_id}-${row.person_id}`,
-          cycleId: row.cycle_id!,
-          dimensionId: row.dimension_id!,
-          evaluatorId: row.evaluator_id!,
-          personId: row.person_id!,
-        }));
+      const text = await newFile.text();
+      const rows = parseCSV(text);
+      setPreview(rows);
 
-      addBulkAssignments(assignments);
-      setFile(null);
-      setPreview([]);
-      setErrors([]);
-      onImportSuccess();
-    } catch (error) {
-      setErrors([
-        {
-          row: 0,
-          message:
-            'Error al importar: ' +
-            (error instanceof Error ? error.message : 'desconocido'),
-        },
-      ]);
+      const validationErrors: ValidationError[] = [];
+      rows.forEach((row, idx) => {
+        const rowNum = idx + 2;
+        if (!row.evaluator_internal_id) {
+          validationErrors.push({
+            row: rowNum,
+            message: 'Falta evaluator_internal_id',
+          });
+        }
+        if (!row.person_internal_id) {
+          validationErrors.push({
+            row: rowNum,
+            message: 'Falta person_internal_id',
+          });
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+
+      const internalIds = [
+        ...new Set(
+          rows.flatMap(r => [r.evaluator_internal_id!, r.person_internal_id!]),
+        ),
+      ];
+      const { data: users } = await postgrest.get<HumandUserLookup>('users', {
+        employeeInternalId: `in.(${internalIds.join(',')})`,
+        select: 'id,employeeInternalId,firstName,lastName',
+      });
+      const byInternalId = new Map(users.map(u => [u.employeeInternalId, u]));
+
+      const rowResults = rows.map((row, idx) => {
+        const rowNum = idx + 2;
+        const evaluator = byInternalId.get(row.evaluator_internal_id!);
+        const person = byInternalId.get(row.person_internal_id!);
+        if (!evaluator) {
+          validationErrors.push({
+            row: rowNum,
+            message: `Evaluador no encontrado: ${row.evaluator_internal_id}`,
+          });
+        }
+        if (!person) {
+          validationErrors.push({
+            row: rowNum,
+            message: `Persona no encontrada: ${row.person_internal_id}`,
+          });
+        }
+        return { evaluator, person };
+      });
+
+      if (validationErrors.length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+
+      setResolved(
+        rowResults as { evaluator: HumandUserLookup; person: HumandUserLookup }[],
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const handleImport = () => {
+    const assignments: EvaluatorAssignment[] = resolved.flatMap(
+      ({ evaluator, person }) =>
+        cycle.dimensionIds.map(dimensionId => ({
+          id: `${cycle.id}-${dimensionId}-${evaluator.id}-${person.id}`,
+          cycleId: cycle.id,
+          dimensionId,
+          evaluatorId: String(evaluator.id),
+          personId: String(person.id),
+        })),
+    );
+
+    addBulkAssignments(assignments);
+    setPreview([]);
+    setResolved([]);
+    onImportSuccess();
+  };
+
   return (
     <Stack sx={{ gap: 2 }}>
       <Typography variant="body2">
-        Cargá un archivo CSV con las siguientes columnas:
+        Cargá un archivo CSV con las columnas:
         <br />
-        <code>cycle_id,dimension_id,evaluator_id,person_id</code>
+        <code>evaluator_internal_id,person_internal_id</code>
+        <br />
+        Usá el mismo identificador que cada persona tiene en Humand (email,
+        DNI, legajo, etc. — el que use tu comunidad).
       </Typography>
+
+      <Button
+        variant="secondary"
+        onClick={handleDownloadTemplate}
+      >
+        Descargar plantilla ({cyclePersons.length} personas del segmento)
+      </Button>
 
       <input
         type="file"
@@ -179,6 +210,8 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
         onChange={handleFileChange}
         style={{ width: '100%' }}
       />
+
+      {loading && <Typography variant="caption">Procesando...</Typography>}
 
       {errors.length > 0 && (
         <Alert severity="error">
@@ -201,28 +234,28 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
         </Alert>
       )}
 
-      {preview.length > 0 && errors.length === 0 && (
+      {resolved.length > 0 && errors.length === 0 && (
         <CardContainer padding={16}>
           <Stack sx={{ gap: 1 }}>
             <Typography variant="subtitle2">
-              Preview ({preview.length} filas)
+              Preview ({resolved.length} filas)
             </Typography>
-            {preview.slice(0, 3).map((row, idx) => (
+            {resolved.slice(0, 5).map((r, idx) => (
               <Typography
                 key={idx}
                 variant="caption"
                 sx={{ color: 'text.secondary' }}
               >
-                {row.cycle_id} → {row.dimension_id} → {row.evaluator_id} eval a{' '}
-                {row.person_id}
+                {r.evaluator.firstName} {r.evaluator.lastName} evalúa a{' '}
+                {r.person.firstName} {r.person.lastName}
               </Typography>
             ))}
-            {preview.length > 3 && (
+            {resolved.length > 5 && (
               <Typography
                 variant="caption"
                 sx={{ color: 'text.secondary' }}
               >
-                ... y {preview.length - 3} filas más
+                ... y {resolved.length - 5} filas más
               </Typography>
             )}
           </Stack>
@@ -234,10 +267,10 @@ export const CSVImportModal = ({ onImportSuccess }: CSVImportModalProps) => {
       >
         <Button
           variant="primary"
-          disabled={!preview.length || errors.length > 0 || loading}
+          disabled={!resolved.length || errors.length > 0 || loading}
           onClick={handleImport}
         >
-          {loading ? 'Importando...' : 'Importar'}
+          Importar
         </Button>
       </Stack>
     </Stack>
