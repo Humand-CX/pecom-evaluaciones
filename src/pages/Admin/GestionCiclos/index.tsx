@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   IconCalendarEvent,
@@ -26,10 +26,8 @@ import { useDrawerLayer } from '@material-hu/components/layers/Drawers';
 import { useMenuLayer } from '@material-hu/components/layers/Menus';
 
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
-import {
-  MOCK_CYCLES,
-  STATUS_CONFIG,
-} from '../../Evaluador/CiclosActivos/constants';
+import { cyclesService, type Cycle as SupabaseCycle } from '../../../services/supabase/cycles';
+import { STATUS_CONFIG } from '../../Evaluador/CiclosActivos/constants';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
 
 import { CSVImportModal } from './CSVImportModal';
@@ -45,37 +43,68 @@ const formatDate = (dateStr: string) =>
     year: 'numeric',
   });
 
+const toFrontendCycle = (row: SupabaseCycle): Cycle => ({
+  id: row.id,
+  name: row.name,
+  project_name: row.project_name ?? '',
+  start_date: row.start_date ?? '',
+  end_date: row.end_date ?? '',
+  status: row.status,
+  dimensionIds: row.dimension_ids ?? [],
+  segmentIds: row.segment_ids ?? [],
+});
+
 export const GestionCiclosPage = () => {
-  const [cycles, setCycles] = useState<Cycle[]>([...MOCK_CYCLES]);
+  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [loading, setLoading] = useState(true);
   const { openDrawer, closeDrawer } = useDrawerLayer();
   const { openMenu } = useMenuLayer();
 
-  const handleSave = (values: CycleFormValues, id?: string) => {
+  useEffect(() => {
+    cyclesService
+      .getAll()
+      .then(rows => setCycles(rows.map(toFrontendCycle)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async (values: CycleFormValues, id?: string) => {
     if (id) {
-      setCycles(prev => prev.map(c => (c.id === id ? { ...c, ...values } : c)));
+      const updated = await cyclesService.update(id, {
+        name: values.name,
+        project_name: values.project_name,
+        start_date: values.start_date,
+        end_date: values.end_date,
+        dimension_ids: values.dimensionIds,
+        segment_ids: values.segmentIds,
+      });
+      setCycles(prev =>
+        prev.map(c => (c.id === id ? toFrontendCycle(updated) : c)),
+      );
     } else {
-      const newCycle: Cycle = {
+      const created = await cyclesService.create({
         id: String(Date.now()),
         name: values.name || '',
         project_name: values.project_name || '',
         start_date: values.start_date || '',
         end_date: values.end_date || '',
-        dimensionIds: values.dimensionIds || [],
-        segmentIds: values.segmentIds || [],
+        dimension_ids: values.dimensionIds || [],
+        segment_ids: values.segmentIds || [],
         status: 'draft',
-      };
-      setCycles(prev => [...prev, newCycle]);
+      });
+      setCycles(prev => [...prev, toFrontendCycle(created)]);
     }
     closeDrawer();
   };
 
-  const handleActivate = (cycle: Cycle) => {
+  const handleActivate = async (cycle: Cycle) => {
+    await cyclesService.update(cycle.id, { status: 'active' });
     setCycles(prev =>
       prev.map(c => (c.id === cycle.id ? { ...c, status: 'active' } : c)),
     );
   };
 
-  const handleClose = (cycle: Cycle) => {
+  const handleClose = async (cycle: Cycle) => {
+    await cyclesService.update(cycle.id, { status: 'closed' });
     setCycles(prev =>
       prev.map(c => (c.id === cycle.id ? { ...c, status: 'closed' } : c)),
     );
@@ -234,7 +263,7 @@ export const GestionCiclosPage = () => {
           </Stack>
         </Stack>
 
-        {cycles.length === 0 ? (
+        {loading ? null : cycles.length === 0 ? (
           <StateCard
             slotProps={{
               title: { title: 'No hay ciclos creados', variant: 'M' },

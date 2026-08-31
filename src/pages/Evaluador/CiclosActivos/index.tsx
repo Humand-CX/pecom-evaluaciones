@@ -10,35 +10,33 @@ import Title from '@material-hu/components/design-system/Title';
 
 import { useUser } from '../../../providers/UserContext';
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
+import { cyclesService, type Cycle as SupabaseCycle } from '../../../services/supabase/cycles';
 
 import { CycleCard } from './components/CycleCard';
-import { MOCK_CYCLES } from './constants';
+import { type Cycle } from './types';
 
-interface Cycle {
-  id: string;
-  name: string;
-  description?: string;
-  status: string;
-  startDate?: string;
-  endDate?: string;
-  [key: string]: any;
-}
+const toFrontendCycle = (row: SupabaseCycle): Cycle => ({
+  id: row.id,
+  name: row.name,
+  project_name: row.project_name ?? '',
+  start_date: row.start_date ?? '',
+  end_date: row.end_date ?? '',
+  status: row.status,
+  dimensionIds: row.dimension_ids ?? [],
+  segmentIds: row.segment_ids ?? [],
+});
 
 export default function CiclosActivosPage() {
   const navigate = useNavigate();
   const { user } = useUser();
-  const [cycles] = useState<Cycle[]>(MOCK_CYCLES);
-  const [cyclesLoading, setCyclesLoading] = useState(false);
+  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [cyclesLoading, setCyclesLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Obtener ciclos asignados del usuario desde Supabase
-    // Por ahora usamos MOCK_CYCLES
-    setCyclesLoading(true);
-    // Simulamos una pequeña demora
-    setTimeout(() => {
-      setCyclesLoading(false);
-      // setCycles(datosDesdeSupabase);
-    }, 500);
+    cyclesService
+      .getAll()
+      .then(rows => setCycles(rows.map(toFrontendCycle)))
+      .finally(() => setCyclesLoading(false));
   }, []);
 
   if (cyclesLoading) {
