@@ -9,7 +9,7 @@ import {
   refreshTokens,
   resolveSession,
   PRIMARY_AUDIENCE,
-} from './_token-base';
+} from './_token-base.js';
 
 export type { TokenSet, JwtPayload, Session };
 export { buildClearCookies, buildTokenCookies, parseCookies, refreshTokens, resolveSession };
