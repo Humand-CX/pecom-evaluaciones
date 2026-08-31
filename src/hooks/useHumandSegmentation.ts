@@ -38,6 +38,89 @@ export function useSegmentationGroups() {
   return { groups, loading };
 }
 
+export interface HumandUser {
+  id: number;
+  email: string | null;
+  firstName: string;
+  lastName: string;
+}
+
+export function useSegmentMembers(itemIds: string[]) {
+  const [members, setMembers] = useState<HumandUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const key = itemIds.join(',');
+
+  useEffect(() => {
+    if (!key) {
+      setMembers([]);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    postgrest
+      .get<{ segmentableId: number }>('segmentations', {
+        segmentableType: 'eq.user',
+        itemId: `in.(${key})`,
+        select: 'segmentableId',
+      })
+      .then(({ data }) => {
+        const userIds = [...new Set(data.map(row => row.segmentableId))];
+        if (userIds.length === 0) return { data: [] as HumandUser[] };
+        return postgrest.get<HumandUser>('users', {
+          id: `in.(${userIds.join(',')})`,
+          select: 'id,email,firstName,lastName',
+          order: 'firstName.asc',
+        });
+      })
+      .then(result => {
+        if (!cancelled && result) setMembers(result.data);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+
+  return { members, loading };
+}
+
+export function useHumandUsers(search: string) {
+  const [users, setUsers] = useState<HumandUser[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    const timeout = setTimeout(() => {
+      const params: Record<string, string> = {
+        select: 'id,email,firstName,lastName',
+        status: 'eq.ACTIVE',
+        order: 'firstName.asc',
+        limit: '50',
+      };
+      if (search.trim()) {
+        params.or = `(firstName.ilike.*${search.trim()}*,lastName.ilike.*${search.trim()}*,email.ilike.*${search.trim()}*)`;
+      }
+      postgrest
+        .get<HumandUser>('users', params)
+        .then(({ data }) => {
+          if (!cancelled) setUsers(data);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [search]);
+
+  return { users, loading };
+}
+
 export function useSegmentationItems(groupId: number | null) {
   const [items, setItems] = useState<SegmentationItem[]>([]);
   const [loading, setLoading] = useState(false);

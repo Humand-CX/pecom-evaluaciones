@@ -8,19 +8,18 @@ import Radio from '@material-hu/mui/Radio';
 import RadioGroup from '@material-hu/mui/RadioGroup';
 import Select from '@material-hu/mui/Select';
 import Stack from '@material-hu/mui/Stack';
+import TextField from '@material-hu/mui/TextField';
 import Typography from '@material-hu/mui/Typography';
 
 import Button from '@material-hu/components/design-system/Buttons/Button';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 
-import { useDimensions } from '../../../providers/DimensionsContext';
 import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
-import { useSegments } from '../../../providers/SegmentsContext';
-import { type Cycle } from '../../Evaluador/CiclosActivos/types';
 import {
-  MOCK_EVALUATORS,
-  MOCK_PEOPLE,
-} from '../../Evaluador/MatrizEvaluacion/constants';
+  useHumandUsers,
+  useSegmentMembers,
+} from '../../../hooks/useHumandSegmentation';
+import { type Cycle } from '../../Evaluador/CiclosActivos/types';
 
 import { CSVImportModal } from './CSVImportModal';
 
@@ -29,24 +28,22 @@ type EvaluatorAssignmentModalProps = {
   onSuccess: () => void;
 };
 
+const fullName = (u: { firstName: string; lastName: string }) =>
+  `${u.firstName} ${u.lastName}`.trim();
+
 export const EvaluatorAssignmentModal = ({
   cycle,
   onSuccess,
 }: EvaluatorAssignmentModalProps) => {
   const { addBulkAssignments } = useEvaluatorAssignments();
-  const { segments } = useSegments();
-  const { dimensions } = useDimensions();
 
   const [mode, setMode] = useState<'manual' | 'masivo'>('manual');
   const [selectedEvaluator, setSelectedEvaluator] = useState('');
+  const [evaluatorSearch, setEvaluatorSearch] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Get persons from cycle segments
-  const cyclePersons = MOCK_PEOPLE.filter(person =>
-    segments
-      .filter(seg => cycle.segmentIds.includes(seg.id))
-      .some(seg => seg.personIds.includes(person.id)),
-  );
+  const { members: cyclePersons } = useSegmentMembers(cycle.segmentIds);
+  const { users: evaluatorOptions } = useHumandUsers(evaluatorSearch);
 
   const handleManualAssign = async () => {
     if (!selectedEvaluator) return;
@@ -63,7 +60,7 @@ export const EvaluatorAssignmentModal = ({
             cycleId: cycle.id,
             dimensionId,
             evaluatorId: selectedEvaluator,
-            personId: person.id,
+            personId: String(person.id),
           });
         });
       });
@@ -114,6 +111,14 @@ export const EvaluatorAssignmentModal = ({
               {cycle.dimensionIds.length} dimensiones
             </Typography>
 
+            <TextField
+              label="Buscar evaluador"
+              placeholder="Nombre, apellido o email"
+              value={evaluatorSearch}
+              onChange={e => setEvaluatorSearch(e.target.value)}
+              fullWidth
+            />
+
             <FormControl fullWidth>
               <InputLabel>Evaluador*</InputLabel>
               <Select
@@ -121,12 +126,12 @@ export const EvaluatorAssignmentModal = ({
                 onChange={e => setSelectedEvaluator(e.target.value)}
                 label="Evaluador*"
               >
-                {MOCK_EVALUATORS.map(evaluator => (
+                {evaluatorOptions.map(evaluator => (
                   <MenuItem
                     key={evaluator.id}
-                    value={evaluator.id}
+                    value={String(evaluator.id)}
                   >
-                    {evaluator.name}
+                    {fullName(evaluator)}
                   </MenuItem>
                 ))}
               </Select>
