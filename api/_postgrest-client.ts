@@ -70,27 +70,29 @@ export async function queryPostgrest<T>(path: string, params: Record<string, str
   return res.data as T
 }
 
+export async function getHumandUserIdByEmail(email: string): Promise<number | null> {
+  const users = await queryPostgrest<Array<{ id: number }>>('users', {
+    email: `eq.${email}`,
+    select: 'id',
+  })
+  return users.length ? users[0].id : null
+}
+
 /**
  * Admin = has the MANAGE_INSTANCE capability in Humand.
  * Works for the legacy capability model; not yet confirmed under Cerberus (Roles & Permissions) —
  * see project memory for the production-instance migration checklist.
  */
-export async function isInstanceAdmin(email: string): Promise<boolean> {
+export async function hasManageInstanceCapability(userId: number): Promise<boolean> {
   try {
-    const users = await queryPostgrest<Array<{ id: number }>>('users', {
-      email: `eq.${email}`,
-      select: 'id',
-    })
-    if (!users.length) return false
-
     const caps = await queryPostgrest<Array<{ capabilityName: string }>>('user_capabilities', {
-      userId: `eq.${users[0].id}`,
+      userId: `eq.${userId}`,
       capabilityName: 'eq.MANAGE_INSTANCE',
       select: 'capabilityName',
     })
     return caps.length > 0
   } catch (error) {
-    console.error('isInstanceAdmin check failed:', error)
+    console.error('hasManageInstanceCapability check failed:', error)
     return false
   }
 }

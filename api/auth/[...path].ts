@@ -8,7 +8,11 @@ import {
   refreshTokens,
   resolveSession,
 } from './_lib.js';
-import { isInstanceAdmin } from '../_postgrest-client.js';
+import {
+  getHumandUserIdByEmail,
+  hasManageInstanceCapability,
+} from '../_postgrest-client.js';
+import { isInstanceEvaluator } from '../_supabase-client.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const segments = (req.query.path ?? req.query['...path']) as
@@ -65,11 +69,20 @@ async function handleMe(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Set-Cookie', session.renewedCookies);
   }
 
-  const isAdmin = session.user.email
-    ? await isInstanceAdmin(session.user.email)
-    : false;
+  let isAdmin = false;
+  let isEvaluator = false;
 
-  return res.status(200).json({ ...session.user, isAdmin });
+  if (session.user.email) {
+    const humandUserId = await getHumandUserIdByEmail(session.user.email);
+    if (humandUserId != null) {
+      [isAdmin, isEvaluator] = await Promise.all([
+        hasManageInstanceCapability(humandUserId),
+        isInstanceEvaluator(humandUserId),
+      ]);
+    }
+  }
+
+  return res.status(200).json({ ...session.user, isAdmin, isEvaluator });
 }
 
 // ── POST /api/auth/refresh ────────────────────────────────────────────────────

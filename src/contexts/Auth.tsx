@@ -8,6 +8,7 @@ interface User {
   name?: string;
   picture?: string;
   isAdmin: boolean;
+  isEvaluator: boolean;
 }
 
 interface AuthContextValue {

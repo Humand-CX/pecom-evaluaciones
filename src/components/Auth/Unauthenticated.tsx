@@ -8,13 +8,19 @@ import BlankLayout from '../../layouts/BlankLayout';
 const HUMAND_APP_URL =
   import.meta.env.VITE_HUMAND_APP_URL ?? 'https://app.humand.co';
 
-const UnauthenticatedPage = () => {
+type UnauthenticatedPageProps = {
+  description?: string;
+};
+
+const UnauthenticatedPage = ({
+  description = 'Para acceder a esta aplicación debés iniciar sesión desde Humand.',
+}: UnauthenticatedPageProps) => {
   return (
     <BlankLayout>
       <Stack sx={{ padding: 2 }}>
         <StateCard
           title="Acceso restringido"
-          description="Para acceder a esta aplicación debés iniciar sesión desde Humand."
+          description={description}
           variant="primary"
           icon={IconLock}
           primaryAction={{

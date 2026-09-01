@@ -25,16 +25,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { user: authUser, logout: authLogout } = useAuth();
 
   const isAdmin = authUser?.isAdmin ?? false;
-  // TODO: evaluador se define por asignación explícita en Supabase (pendiente de migrar
-  // desde localStorage) — hasta entonces, cualquier usuario logueado no-admin pasa como evaluador.
-  const isEvaluator = !isAdmin;
+  const isEvaluator = authUser?.isEvaluator ?? false;
 
   const user: AuthUser | null = authUser
     ? {
         id: authUser.sub,
         email: authUser.email ?? '',
         name: authUser.name ?? '',
-        role: isAdmin ? 'admin' : 'evaluator',
+        role: isAdmin ? 'admin' : isEvaluator ? 'evaluator' : 'viewer',
       }
     : null;
 
