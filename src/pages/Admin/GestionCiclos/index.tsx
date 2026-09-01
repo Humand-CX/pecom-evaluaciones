@@ -25,6 +25,7 @@ import { useDrawerLayer } from '@material-hu/components/layers/Drawers';
 import { useMenuLayer } from '@material-hu/components/layers/Menus';
 
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
+import { useDimensions } from '../../../providers/DimensionsContext';
 import { cyclesService, type Cycle as SupabaseCycle } from '../../../services/supabase/cycles';
 import { STATUS_CONFIG } from '../../Evaluador/CiclosActivos/constants';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
@@ -57,6 +58,7 @@ export const GestionCiclosPage = () => {
   const [loading, setLoading] = useState(true);
   const { openDrawer, closeDrawer } = useDrawerLayer();
   const { openMenu } = useMenuLayer();
+  const { dimensions } = useDimensions();
 
   useEffect(() => {
     cyclesService
@@ -66,13 +68,20 @@ export const GestionCiclosPage = () => {
   }, []);
 
   const handleSave = async (values: CycleFormValues, id?: string) => {
+    // Descarta cualquier dimensión que ya no exista (ej: quedó de una versión
+    // anterior del ciclo) — de lo contrario rompe el insert de asignaciones
+    // por la foreign key a `dimensions`.
+    const validDimensionIds = (values.dimensionIds ?? []).filter(dId =>
+      dimensions.some(d => d.id === dId),
+    );
+
     if (id) {
       const updated = await cyclesService.update(id, {
         name: values.name,
         project_name: values.project_name,
         start_date: values.start_date,
         end_date: values.end_date,
-        dimension_ids: values.dimensionIds,
+        dimension_ids: validDimensionIds,
         segment_ids: values.segmentIds,
       });
       setCycles(prev =>
@@ -85,7 +94,7 @@ export const GestionCiclosPage = () => {
         project_name: values.project_name || '',
         start_date: values.start_date || '',
         end_date: values.end_date || '',
-        dimension_ids: values.dimensionIds || [],
+        dimension_ids: validDimensionIds,
         segment_ids: values.segmentIds || [],
         status: 'draft',
       });

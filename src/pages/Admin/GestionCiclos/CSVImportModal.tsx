@@ -186,6 +186,16 @@ export const CSVImportModal = ({
       setPreview([]);
       setResolved([]);
       onImportSuccess();
+    } catch (err) {
+      setErrors([
+        {
+          row: 0,
+          message:
+            err instanceof Error
+              ? err.message
+              : 'No se pudo importar las asignaciones.',
+        },
+      ]);
     } finally {
       setLoading(false);
     }

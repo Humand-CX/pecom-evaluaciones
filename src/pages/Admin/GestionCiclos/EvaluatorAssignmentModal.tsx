@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import Alert from '@material-hu/mui/Alert';
 import Autocomplete from '@material-hu/mui/Autocomplete';
 import FormControlLabel from '@material-hu/mui/FormControlLabel';
 import Radio from '@material-hu/mui/Radio';
@@ -40,6 +41,7 @@ export const EvaluatorAssignmentModal = ({
   );
   const [evaluatorSearch, setEvaluatorSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { members: cyclePersons } = useSegmentMembers(cycle.segmentIds);
   const { users: evaluatorOptions, loading: evaluatorsLoading } =
@@ -49,6 +51,7 @@ export const EvaluatorAssignmentModal = ({
     if (!selectedEvaluator) return;
 
     setLoading(true);
+    setError(null);
     try {
       const assignments = [];
 
@@ -67,6 +70,12 @@ export const EvaluatorAssignmentModal = ({
 
       await addBulkAssignments(assignments);
       onSuccess();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo guardar la asignación.',
+      );
     } finally {
       setLoading(false);
     }
@@ -134,6 +143,8 @@ export const EvaluatorAssignmentModal = ({
               )}
               fullWidth
             />
+
+            {error && <Alert severity="error">{error}</Alert>}
 
             <Button
               variant="primary"
