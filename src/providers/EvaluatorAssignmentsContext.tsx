@@ -6,14 +6,16 @@ import {
   useState,
 } from 'react';
 
+import {
+  assignmentsService,
+  type EvaluatorAssignment as SupabaseAssignment,
+} from '../services/supabase/assignments';
 import { type EvaluatorAssignment } from '../types/evaluatorAssignments';
-
-const STORAGE_KEY = 'pecom-evaluator-assignments';
 
 type EvaluatorAssignmentsContextValue = {
   assignments: EvaluatorAssignment[];
   addAssignment: (assignment: EvaluatorAssignment) => void;
-  addBulkAssignments: (assignments: EvaluatorAssignment[]) => void;
+  addBulkAssignments: (assignments: EvaluatorAssignment[]) => Promise<void>;
   deleteAssignment: (id: string) => void;
   getAssignmentsByCycleDimension: (
     cycleId: string,
@@ -26,42 +28,70 @@ type EvaluatorAssignmentsContextValue = {
 const EvaluatorAssignmentsContext =
   createContext<EvaluatorAssignmentsContextValue | null>(null);
 
-function loadFromStorage(): EvaluatorAssignment[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as EvaluatorAssignment[];
-  } catch {}
-  return [];
-}
+const toFrontend = (row: SupabaseAssignment): EvaluatorAssignment => ({
+  id: row.id,
+  cycleId: row.cycle_id,
+  dimensionId: row.dimension_id,
+  evaluatorId: row.evaluator_id,
+  personId: row.person_id,
+});
+
+const toSupabase = (a: EvaluatorAssignment): SupabaseAssignment => ({
+  id: a.id,
+  cycle_id: a.cycleId,
+  dimension_id: a.dimensionId,
+  evaluator_id: a.evaluatorId,
+  person_id: a.personId,
+});
 
 export const EvaluatorAssignmentsProvider = ({
   children,
 }: {
   children: ReactNode;
 }) => {
-  const [assignments, setAssignments] =
-    useState<EvaluatorAssignment[]>(loadFromStorage);
+  const [assignments, setAssignments] = useState<EvaluatorAssignment[]>([]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
-  }, [assignments]);
+    assignmentsService.getAll().then(rows => setAssignments(rows.map(toFrontend)));
+  }, []);
 
   const addAssignment = (assignment: EvaluatorAssignment) => {
-    setAssignments(prev => [...prev, assignment]);
+    assignmentsService.create(toSupabase(assignment)).then(row => {
+      setAssignments(prev => [...prev, toFrontend(row)]);
+    });
   };
 
-  const addBulkAssignments = (newAssignments: EvaluatorAssignment[]) => {
-    const keyOf = (a: EvaluatorAssignment) =>
-      `${a.cycleId}|${a.dimensionId}|${a.personId}`;
-    const newKeys = new Set(newAssignments.map(keyOf));
+  const addBulkAssignments = async (newAssignments: EvaluatorAssignment[]) => {
+    if (newAssignments.length === 0) return;
+
+    const cycleId = newAssignments[0].cycleId;
+    const dimensionIds = [...new Set(newAssignments.map(a => a.dimensionId))];
+    const personIds = [...new Set(newAssignments.map(a => a.personId))];
+
+    await assignmentsService.deleteByCycleDimensionsPersons(
+      cycleId,
+      dimensionIds,
+      personIds,
+    );
+    const created = await assignmentsService.bulkCreate(
+      newAssignments.map(toSupabase),
+    );
+
+    const replacedKeys = new Set(
+      newAssignments.map(a => `${a.cycleId}|${a.dimensionId}|${a.personId}`),
+    );
     setAssignments(prev => [
-      ...prev.filter(a => !newKeys.has(keyOf(a))),
-      ...newAssignments,
+      ...prev.filter(
+        a => !replacedKeys.has(`${a.cycleId}|${a.dimensionId}|${a.personId}`),
+      ),
+      ...created.map(toFrontend),
     ]);
   };
 
   const deleteAssignment = (id: string) => {
-    setAssignments(prev => prev.filter(a => a.id !== id));
+    assignmentsService.delete(id).then(() => {
+      setAssignments(prev => prev.filter(a => a.id !== id));
+    });
   };
 
   const getAssignmentsByCycleDimension = (
@@ -78,7 +108,9 @@ export const EvaluatorAssignmentsProvider = ({
   };
 
   const deleteAssignmentsByCycle = (cycleId: string) => {
-    setAssignments(prev => prev.filter(a => a.cycleId !== cycleId));
+    assignmentsService.deleteByCycle(cycleId).then(() => {
+      setAssignments(prev => prev.filter(a => a.cycleId !== cycleId));
+    });
   };
 
   return (

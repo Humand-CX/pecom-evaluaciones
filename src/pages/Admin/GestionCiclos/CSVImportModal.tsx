@@ -168,7 +168,7 @@ export const CSVImportModal = ({
     }
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     const assignments: EvaluatorAssignment[] = resolved.flatMap(
       ({ evaluator, person }) =>
         cycle.dimensionIds.map(dimensionId => ({
@@ -180,10 +180,15 @@ export const CSVImportModal = ({
         })),
     );
 
-    addBulkAssignments(assignments);
-    setPreview([]);
-    setResolved([]);
-    onImportSuccess();
+    setLoading(true);
+    try {
+      await addBulkAssignments(assignments);
+      setPreview([]);
+      setResolved([]);
+      onImportSuccess();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

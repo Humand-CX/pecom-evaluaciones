@@ -72,4 +72,26 @@ export const assignmentsService = {
       .eq('person_id', personId);
     if (error) throw error;
   },
+
+  async deleteByCycle(cycleId: string) {
+    const { error } = await supabase
+      .from('evaluator_assignments')
+      .delete()
+      .eq('cycle_id', cycleId);
+    if (error) throw error;
+  },
+
+  async deleteByCycleDimensionsPersons(
+    cycleId: string,
+    dimensionIds: string[],
+    personIds: string[],
+  ) {
+    const { error } = await supabase
+      .from('evaluator_assignments')
+      .delete()
+      .eq('cycle_id', cycleId)
+      .in('dimension_id', dimensionIds)
+      .in('person_id', personIds);
+    if (error) throw error;
+  },
 };

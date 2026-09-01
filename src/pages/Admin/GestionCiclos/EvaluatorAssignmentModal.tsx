@@ -65,7 +65,7 @@ export const EvaluatorAssignmentModal = ({
         });
       });
 
-      addBulkAssignments(assignments);
+      await addBulkAssignments(assignments);
       onSuccess();
     } finally {
       setLoading(false);
