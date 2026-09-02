@@ -70,12 +70,23 @@ export async function queryPostgrest<T>(path: string, params: Record<string, str
   return res.data as T
 }
 
+/**
+ * Not every Humand user has `email` populated in this view — some communities use
+ * `employeeInternalId` (which can itself be an email, DNI, legajo, etc.) as the real
+ * identifier instead. Try `email` first, fall back to `employeeInternalId`.
+ */
 export async function getHumandUserIdByEmail(email: string): Promise<number | null> {
-  const users = await queryPostgrest<Array<{ id: number }>>('users', {
+  const byEmail = await queryPostgrest<Array<{ id: number }>>('users', {
     email: `eq.${email}`,
     select: 'id',
   })
-  return users.length ? users[0].id : null
+  if (byEmail.length) return byEmail[0].id
+
+  const byInternalId = await queryPostgrest<Array<{ id: number }>>('users', {
+    employeeInternalId: `eq.${email}`,
+    select: 'id',
+  })
+  return byInternalId.length ? byInternalId[0].id : null
 }
 
 /**
