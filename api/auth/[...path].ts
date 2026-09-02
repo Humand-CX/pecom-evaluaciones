@@ -8,10 +8,7 @@ import {
   refreshTokens,
   resolveSession,
 } from './_lib.js';
-import {
-  getHumandUserIdByEmail,
-  hasManageInstanceCapability,
-} from '../_postgrest-client.js';
+import { hasManageInstanceCapability } from '../_postgrest-client.js';
 import { isInstanceEvaluator } from '../_supabase-client.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -71,16 +68,13 @@ async function handleMe(req: VercelRequest, res: VercelResponse) {
 
   let isAdmin = false;
   let isEvaluator = false;
-  let humandUserId: number | null = null;
+  const humandUserId = session.user.user_id ?? null;
 
-  if (session.user.email) {
-    humandUserId = await getHumandUserIdByEmail(session.user.email);
-    if (humandUserId != null) {
-      [isAdmin, isEvaluator] = await Promise.all([
-        hasManageInstanceCapability(humandUserId),
-        isInstanceEvaluator(humandUserId),
-      ]);
-    }
+  if (humandUserId != null) {
+    [isAdmin, isEvaluator] = await Promise.all([
+      hasManageInstanceCapability(humandUserId),
+      isInstanceEvaluator(humandUserId),
+    ]);
   }
 
   return res

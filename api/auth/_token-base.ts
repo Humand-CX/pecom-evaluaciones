@@ -39,6 +39,9 @@ export interface JwtPayload {
   name?: string;
   picture?: string;
   exp?: number;
+  /** Humand's own numeric user id — always present for USER tokens, regardless of
+   * what the community uses as employeeInternalId (email, DNI, legajo, etc). */
+  user_id?: number;
 }
 
 export interface Session {

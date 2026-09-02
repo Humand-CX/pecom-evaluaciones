@@ -71,25 +71,6 @@ export async function queryPostgrest<T>(path: string, params: Record<string, str
 }
 
 /**
- * Not every Humand user has `email` populated in this view — some communities use
- * `employeeInternalId` (which can itself be an email, DNI, legajo, etc.) as the real
- * identifier instead. Try `email` first, fall back to `employeeInternalId`.
- */
-export async function getHumandUserIdByEmail(email: string): Promise<number | null> {
-  const byEmail = await queryPostgrest<Array<{ id: number }>>('users', {
-    email: `eq.${email}`,
-    select: 'id',
-  })
-  if (byEmail.length) return byEmail[0].id
-
-  const byInternalId = await queryPostgrest<Array<{ id: number }>>('users', {
-    employeeInternalId: `eq.${email}`,
-    select: 'id',
-  })
-  return byInternalId.length ? byInternalId[0].id : null
-}
-
-/**
  * Admin = has the MANAGE_INSTANCE capability in Humand.
  * Works for the legacy capability model; not yet confirmed under Cerberus (Roles & Permissions) —
  * see project memory for the production-instance migration checklist.
