@@ -20,37 +20,35 @@ import { type NavSectionProps } from '@material-hu/components/design-system/Side
 
 import humandLogo from '../../assets/humand.svg';
 import { useAuth } from '../../contexts/Auth';
+import { useUser } from '../../providers/UserContext';
 
-const SECTIONS: NavSectionProps[] = [
+const EVALUATOR_ITEMS: NavSectionProps['items'] = [
   {
-    key: 'main',
-    title: 'Main',
-    items: [
-      {
-        key: 'ciclos',
-        title: 'Mis evaluaciones',
-        path: '/evaluador/ciclos',
-        icon: <IconClipboardList />,
-      },
-      {
-        key: 'gestion-ciclos',
-        title: 'Gestión de ciclos',
-        path: '/admin/ciclos',
-        icon: <IconSettings />,
-      },
-      {
-        key: 'dimensiones',
-        title: 'Banco de dimensiones',
-        path: '/admin/dimensiones',
-        icon: <IconRuler />,
-      },
-      {
-        key: 'resultados',
-        title: 'Resultados',
-        path: '/admin/resultados',
-        icon: <IconChartBar />,
-      },
-    ],
+    key: 'ciclos',
+    title: 'Mis evaluaciones',
+    path: '/evaluador/ciclos',
+    icon: <IconClipboardList />,
+  },
+];
+
+const ADMIN_ITEMS: NavSectionProps['items'] = [
+  {
+    key: 'gestion-ciclos',
+    title: 'Gestión de ciclos',
+    path: '/admin/ciclos',
+    icon: <IconSettings />,
+  },
+  {
+    key: 'dimensiones',
+    title: 'Banco de dimensiones',
+    path: '/admin/dimensiones',
+    icon: <IconRuler />,
+  },
+  {
+    key: 'resultados',
+    title: 'Resultados',
+    path: '/admin/resultados',
+    icon: <IconChartBar />,
   },
 ];
 
@@ -62,8 +60,18 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { pathname } = useLocation();
   const { logout } = useAuth();
+  const { isAdmin } = useUser();
 
   const sidebarWidth = isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
+  const sections: NavSectionProps[] = [
+    {
+      key: 'main',
+      title: 'Main',
+      items: isAdmin
+        ? [...EVALUATOR_ITEMS, ...ADMIN_ITEMS]
+        : EVALUATOR_ITEMS,
+    },
+  ];
 
   return (
     <Stack sx={{ minHeight: '100vh' }}>
@@ -73,7 +81,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         logoAlt="Humand"
         hideNotificationsButton
         hideSupportButton
-        isAdmin={false}
+        isAdmin={isAdmin}
         avatarProps={{ text: 'U' }}
         avatarPopoverContent={
           <Button
@@ -91,7 +99,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <Sidebar
           isCollapsed={isCollapsed}
           pathname={pathname}
-          sections={SECTIONS}
+          sections={sections}
           openMenu={() => setIsCollapsed(false)}
           sx={{
             position: 'sticky',
