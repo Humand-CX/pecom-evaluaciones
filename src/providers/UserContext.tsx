@@ -6,6 +6,7 @@ export type UserRole = 'admin' | 'evaluator' | 'viewer';
 
 export interface AuthUser {
   id: string;
+  humandUserId: number | null;
   email: string;
   name: string;
   role: UserRole;
@@ -30,6 +31,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const user: AuthUser | null = authUser
     ? {
         id: authUser.sub,
+        humandUserId: authUser.humandUserId,
         email: authUser.email ?? '',
         name: authUser.name ?? '',
         role: isAdmin ? 'admin' : isEvaluator ? 'evaluator' : 'viewer',

@@ -10,6 +10,7 @@ import Title from '@material-hu/components/design-system/Title';
 
 import { useUser } from '../../../providers/UserContext';
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
+import { assignmentsService } from '../../../services/supabase/assignments';
 import { cyclesService, type Cycle as SupabaseCycle } from '../../../services/supabase/cycles';
 
 import { CycleCard } from './components/CycleCard';
@@ -33,11 +34,26 @@ export default function CiclosActivosPage() {
   const [cyclesLoading, setCyclesLoading] = useState(true);
 
   useEffect(() => {
-    cyclesService
-      .getAll()
-      .then(rows => setCycles(rows.map(toFrontendCycle)))
+    if (!user?.humandUserId) {
+      setCycles([]);
+      setCyclesLoading(false);
+      return;
+    }
+
+    Promise.all([
+      cyclesService.getAll(),
+      assignmentsService.getByEvaluator(String(user.humandUserId)),
+    ])
+      .then(([allCycles, myAssignments]) => {
+        const myCycleIds = new Set(myAssignments.map(a => a.cycle_id));
+        setCycles(
+          allCycles
+            .filter(c => myCycleIds.has(c.id))
+            .map(toFrontendCycle),
+        );
+      })
       .finally(() => setCyclesLoading(false));
-  }, []);
+  }, [user?.humandUserId]);
 
   if (cyclesLoading) {
     return (

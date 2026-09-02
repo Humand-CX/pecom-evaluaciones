@@ -71,9 +71,10 @@ async function handleMe(req: VercelRequest, res: VercelResponse) {
 
   let isAdmin = false;
   let isEvaluator = false;
+  let humandUserId: number | null = null;
 
   if (session.user.email) {
-    const humandUserId = await getHumandUserIdByEmail(session.user.email);
+    humandUserId = await getHumandUserIdByEmail(session.user.email);
     if (humandUserId != null) {
       [isAdmin, isEvaluator] = await Promise.all([
         hasManageInstanceCapability(humandUserId),
@@ -82,7 +83,9 @@ async function handleMe(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  return res.status(200).json({ ...session.user, isAdmin, isEvaluator });
+  return res
+    .status(200)
+    .json({ ...session.user, isAdmin, isEvaluator, humandUserId });
 }
 
 // ── POST /api/auth/refresh ────────────────────────────────────────────────────

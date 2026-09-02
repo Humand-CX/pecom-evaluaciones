@@ -9,6 +9,7 @@ interface User {
   picture?: string;
   isAdmin: boolean;
   isEvaluator: boolean;
+  humandUserId: number | null;
 }
 
 interface AuthContextValue {
