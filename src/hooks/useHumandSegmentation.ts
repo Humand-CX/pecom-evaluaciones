@@ -122,6 +122,38 @@ export function useHumandUsers(search: string) {
   return { users, loading };
 }
 
+export function useHumandUsersByIds(userIds: string[]) {
+  const [users, setUsers] = useState<HumandUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const key = [...new Set(userIds)].sort().join(',');
+
+  useEffect(() => {
+    if (!key) {
+      setUsers([]);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    postgrest
+      .get<HumandUser>('users', {
+        id: `in.(${key})`,
+        select: 'id,email,employeeInternalId,firstName,lastName',
+        order: 'firstName.asc',
+      })
+      .then(({ data }) => {
+        if (!cancelled) setUsers(data);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+
+  return { users, loading };
+}
+
 export function useUserNames(userIds: string[]) {
   const [names, setNames] = useState<Record<string, string>>({});
   const key = [...new Set(userIds)].sort().join(',');

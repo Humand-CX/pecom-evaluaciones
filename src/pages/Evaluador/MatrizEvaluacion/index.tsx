@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { IconInfoCircle } from '@material-hu/icons/tabler';
@@ -10,16 +10,24 @@ import Typography from '@material-hu/mui/Typography';
 import Button from '@material-hu/components/design-system/Buttons/Button';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 import Pills from '@material-hu/components/design-system/Pills';
+import Spinner from '@material-hu/components/design-system/ProgressIndicators/Spinner';
 import Title from '@material-hu/components/design-system/Title';
 import { useDialogLayer } from '@material-hu/components/layers/Dialogs';
 
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
 import { useDimensions } from '../../../providers/DimensionsContext';
-import { MOCK_CYCLES, STATUS_CONFIG } from '../CiclosActivos/constants';
+import { useUser } from '../../../providers/UserContext';
+import { useHumandUsersByIds } from '../../../hooks/useHumandSegmentation';
+import { assignmentsService } from '../../../services/supabase/assignments';
+import { cyclesService, type Cycle as SupabaseCycle } from '../../../services/supabase/cycles';
+import {
+  evaluationResultsService,
+  type EvaluationResultRow,
+} from '../../../services/supabase/evaluationResults';
+import { STATUS_CONFIG } from '../CiclosActivos/constants';
 
 import { ScoreSelector } from './components/ScoreSelector';
-import { DIMENSIONS, MOCK_PEOPLE } from './constants';
-import { type ScoreMatrix, type ScoreValue } from './types';
+import { type ScoreValue } from './types';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('es-AR', {
@@ -33,33 +41,70 @@ export default function MatrizEvaluacionPage() {
   const navigate = useNavigate();
   const { openDialog, closeDialog } = useDialogLayer();
   const { dimensions } = useDimensions();
+  const { user } = useUser();
+  const evaluatorId = user?.humandUserId ? String(user.humandUserId) : null;
 
-  const cycle = MOCK_CYCLES.find(c => c.id === cycleId) ?? MOCK_CYCLES[0];
-  const allDimensions = dimensions.length > 0 ? dimensions : DIMENSIONS;
+  const [cycle, setCycle] = useState<SupabaseCycle | null>(null);
+  const [personIds, setPersonIds] = useState<string[]>([]);
+  const [existingResults, setExistingResults] = useState<EvaluationResultRow[]>(
+    [],
+  );
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Filter dimensions by cycle's dimensionIds
+  const { users: persons } = useHumandUsersByIds(personIds);
+
+  useEffect(() => {
+    if (!cycleId || !evaluatorId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    Promise.all([
+      cyclesService.getById(cycleId),
+      assignmentsService.getByEvaluator(evaluatorId),
+      evaluationResultsService.getByCycleAndEvaluator(cycleId, evaluatorId),
+    ])
+      .then(([cycleRow, myAssignments, results]) => {
+        setCycle(cycleRow);
+        setPersonIds([
+          ...new Set(
+            myAssignments
+              .filter(a => a.cycle_id === cycleId)
+              .map(a => a.person_id),
+          ),
+        ]);
+        setExistingResults(results);
+      })
+      .finally(() => setLoading(false));
+  }, [cycleId, evaluatorId]);
+
+  const allDimensions = dimensions;
+  const cycleDimensionIds = cycle?.dimension_ids ?? [];
   const activeD =
-    cycle.dimensionIds && cycle.dimensionIds.length > 0
-      ? allDimensions.filter(d => cycle.dimensionIds.includes(d.id))
-      : allDimensions;
-
+    cycleDimensionIds.length > 0
+      ? allDimensions.filter(d => cycleDimensionIds.includes(d.id))
+      : [];
   const subDimensions = activeD.flatMap(d => d.subDimensions);
 
-  const initScores = (): ScoreMatrix => {
-    const matrix: ScoreMatrix = {};
-    MOCK_PEOPLE.forEach(p => {
-      matrix[p.id] = {};
+  const [scores, setScores] = useState<Record<string, Record<string, ScoreValue | null>>>(
+    {},
+  );
+
+  useEffect(() => {
+    const initial: Record<string, Record<string, ScoreValue | null>> = {};
+    persons.forEach(p => {
+      const existing = existingResults.find(r => r.person_id === String(p.id));
+      initial[p.id] = {};
       subDimensions.forEach(sd => {
-        matrix[p.id][sd.id] = null;
+        initial[p.id][sd.id] = (existing?.scores?.[sd.id] as ScoreValue) ?? null;
       });
     });
-    return matrix;
-  };
+    setScores(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persons, existingResults, activeD.length]);
 
-  const statusConfig = STATUS_CONFIG[cycle.status];
-
-  const [scores, setScores] = useState<ScoreMatrix>(initScores);
-  const [submitted, setSubmitted] = useState(false);
+  const submitted = existingResults.some(r => r.submitted_at);
 
   const handleScoreChange = (
     personId: string,
@@ -72,9 +117,38 @@ export default function MatrizEvaluacionPage() {
     }));
   };
 
-  const allFilled = MOCK_PEOPLE.every(p =>
-    subDimensions.every(sd => scores[p.id]?.[sd.id] != null),
-  );
+  const allFilled =
+    persons.length > 0 &&
+    persons.every(p =>
+      subDimensions.every(sd => scores[p.id]?.[sd.id] != null),
+    );
+
+  const persist = async (markSubmitted: boolean) => {
+    if (!cycleId || !evaluatorId) return;
+    setSaving(true);
+    try {
+      const rows = await Promise.all(
+        persons.map(p =>
+          evaluationResultsService.upsert({
+            id: `${cycleId}-${p.id}-${evaluatorId}`,
+            cycle_id: cycleId,
+            person_id: String(p.id),
+            evaluator_id: evaluatorId,
+            scores: scores[p.id] ?? {},
+            submitted_at: markSubmitted ? new Date().toISOString() : null,
+          }),
+        ),
+      );
+      setExistingResults(rows);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveProgress = async () => {
+    await persist(false);
+    navigate('/evaluador/ciclos');
+  };
 
   const handleSubmitClick = () => {
     openDialog({
@@ -83,7 +157,7 @@ export default function MatrizEvaluacionPage() {
       primaryButtonProps: {
         children: 'Enviar',
         onClick: () => {
-          setSubmitted(true);
+          void persist(true);
           closeDialog();
         },
       },
@@ -93,6 +167,32 @@ export default function MatrizEvaluacionPage() {
       },
     });
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <Stack
+          sx={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '400px',
+          }}
+        >
+          <Spinner />
+        </Stack>
+      </DashboardLayout>
+    );
+  }
+
+  if (!cycle) {
+    return (
+      <DashboardLayout>
+        <Typography>No se encontró el ciclo.</Typography>
+      </DashboardLayout>
+    );
+  }
+
+  const statusConfig = STATUS_CONFIG[cycle.status];
 
   return (
     <DashboardLayout>
@@ -107,7 +207,7 @@ export default function MatrizEvaluacionPage() {
         >
           <Title
             title={cycle.name}
-            description={`${formatDate(cycle.start_date)} — ${formatDate(cycle.end_date)}`}
+            description={`${formatDate(cycle.start_date ?? '')} — ${formatDate(cycle.end_date ?? '')}`}
             variant="L"
           />
           <Pills
@@ -124,6 +224,12 @@ export default function MatrizEvaluacionPage() {
           >
             Evaluación enviada correctamente. Los puntajes están en modo
             lectura.
+          </Typography>
+        )}
+
+        {persons.length === 0 && (
+          <Typography sx={{ color: 'text.secondary' }}>
+            No tenés personas asignadas para evaluar en este ciclo.
           </Typography>
         )}
 
@@ -177,7 +283,7 @@ export default function MatrizEvaluacionPage() {
                 <Divider />
 
                 <Stack sx={{ gap: 0 }}>
-                  {MOCK_PEOPLE.map((person, idx) => (
+                  {persons.map((person, idx) => (
                     <Stack
                       key={person.id}
                       sx={{
@@ -190,17 +296,19 @@ export default function MatrizEvaluacionPage() {
                       }}
                     >
                       <Stack sx={{ gap: 0.25, minWidth: 0, flex: 1 }}>
-                        <Typography variant="body2">{person.name}</Typography>
+                        <Typography variant="body2">
+                          {person.firstName} {person.lastName}
+                        </Typography>
                         <Typography
                           variant="caption"
                           color="text.secondary"
                         >
-                          {person.legajo}
+                          {person.email}
                         </Typography>
                       </Stack>
                       <ScoreSelector
                         value={scores[person.id]?.[sd.id] ?? null}
-                        onChange={v => handleScoreChange(person.id, sd.id, v)}
+                        onChange={v => handleScoreChange(String(person.id), sd.id, v)}
                         disabled={submitted}
                       />
                     </Stack>
@@ -211,26 +319,28 @@ export default function MatrizEvaluacionPage() {
           )),
         )}
 
-        <Stack
-          sx={{ flexDirection: 'row', gap: 2, justifyContent: 'flex-end' }}
-        >
-          <Button
-            variant="secondary"
-            size="large"
-            disabled={submitted}
-            onClick={() => navigate('/evaluador/ciclos')}
+        {persons.length > 0 && (
+          <Stack
+            sx={{ flexDirection: 'row', gap: 2, justifyContent: 'flex-end' }}
           >
-            Guardar progreso
-          </Button>
-          <Button
-            variant="primary"
-            size="large"
-            disabled={!allFilled || submitted}
-            onClick={handleSubmitClick}
-          >
-            {submitted ? 'Evaluación enviada' : 'Enviar evaluación'}
-          </Button>
-        </Stack>
+            <Button
+              variant="secondary"
+              size="large"
+              disabled={submitted || saving}
+              onClick={handleSaveProgress}
+            >
+              {saving ? 'Guardando...' : 'Guardar progreso'}
+            </Button>
+            <Button
+              variant="primary"
+              size="large"
+              disabled={!allFilled || submitted || saving}
+              onClick={handleSubmitClick}
+            >
+              {submitted ? 'Evaluación enviada' : 'Enviar evaluación'}
+            </Button>
+          </Stack>
+        )}
       </Stack>
     </DashboardLayout>
   );
