@@ -1,38 +1,37 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
+import { assignmentsService } from '../services/supabase/assignments';
 import { useUser } from '../providers/UserContext';
 
 interface ResultFilter {
   canViewAllResults: boolean;
   assignedCycleIds: string[];
   evaluatorId?: string;
+  loading: boolean;
 }
 
 export const useFilteredResults = (): ResultFilter => {
   const { user, isAdmin, isEvaluator } = useUser();
+  const evaluatorId = user?.humandUserId ? String(user.humandUserId) : undefined;
+  const [assignedCycleIds, setAssignedCycleIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  return useMemo(() => {
-    // Admin ve todos los resultados
-    if (isAdmin) {
-      return {
-        canViewAllResults: true,
-        assignedCycleIds: [],
-      };
+  useEffect(() => {
+    if (isAdmin || !isEvaluator || !evaluatorId) {
+      setLoading(false);
+      return;
     }
+    assignmentsService
+      .getByEvaluator(evaluatorId)
+      .then(rows => {
+        setAssignedCycleIds([...new Set(rows.map(r => r.cycle_id))]);
+      })
+      .finally(() => setLoading(false));
+  }, [isAdmin, isEvaluator, evaluatorId]);
 
-    // Evaluador ve solo resultados de ciclos asignados
-    if (isEvaluator && user?.id) {
-      return {
-        canViewAllResults: false,
-        assignedCycleIds: [], // Esto se llenará desde assignments cuando conectemos Humand
-        evaluatorId: user.id,
-      };
-    }
+  if (isAdmin) {
+    return { canViewAllResults: true, assignedCycleIds: [], loading: false };
+  }
 
-    // Otros (evaluado/viewer) no ven resultados
-    return {
-      canViewAllResults: false,
-      assignedCycleIds: [],
-    };
-  }, [isAdmin, isEvaluator, user?.id]);
+  return { canViewAllResults: false, assignedCycleIds, evaluatorId, loading };
 };

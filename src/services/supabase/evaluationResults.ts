@@ -12,6 +12,15 @@ export interface EvaluationResultRow {
 }
 
 export const evaluationResultsService = {
+  async getByCycle(cycleId: string) {
+    const { data, error } = await supabase
+      .from('evaluation_results')
+      .select('*')
+      .eq('cycle_id', cycleId);
+    if (error) throw error;
+    return data as EvaluationResultRow[];
+  },
+
   async getByCycleAndEvaluator(cycleId: string, evaluatorId: string) {
     const { data, error } = await supabase
       .from('evaluation_results')
