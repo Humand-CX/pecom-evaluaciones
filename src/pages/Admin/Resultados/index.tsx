@@ -381,10 +381,13 @@ export const ResultadosPage = () => {
     const cycleName = selectedCycle?.name ?? selectedCycleId;
     const FIXED_COLS = ['Nombre', 'Email', 'Evaluador', 'Estado'];
 
-    // Fila 1: nombre de cada dimensión, ocupando sus sub-dimensiones + su promedio
-    // Fila 2: columnas fijas + nombre de cada sub-dimensión + "Promedio" (por dimensión) + "Promedio general"
-    const groupRow: (string | number)[] = [...FIXED_COLS.map(() => '')];
-    const headerRow: (string | number)[] = [...FIXED_COLS];
+    // Fila 1: nombre de cada dimensión, ocupando sus sub-dimensiones + su promedio.
+    // Fila 2: nombre de cada sub-dimensión + "Promedio" (por dimensión).
+    // Las columnas fijas y "Promedio general" quedan fusionadas verticalmente,
+    // por eso su texto va en la fila 1 (Excel/Numbers solo muestran el valor
+    // de la celda superior/izquierda de una celda combinada).
+    const groupRow: (string | number)[] = [...FIXED_COLS];
+    const headerRow: (string | number)[] = FIXED_COLS.map(() => '');
     const merges: { s: { r: number; c: number }; e: { r: number; c: number } }[] =
       FIXED_COLS.map((_, i) => ({
         s: { r: 0, c: i },
@@ -393,11 +396,11 @@ export const ResultadosPage = () => {
 
     activeD.forEach(dim => {
       const start = headerRow.length;
-      dim.subDimensions.forEach(sd => {
-        groupRow.push('');
+      dim.subDimensions.forEach((sd, idx) => {
+        groupRow.push(idx === 0 ? dim.name : '');
         headerRow.push(sd.name);
       });
-      groupRow.push(dim.name);
+      groupRow.push('');
       headerRow.push('Promedio');
       const span = dim.subDimensions.length + 1;
       merges.push({
@@ -407,8 +410,8 @@ export const ResultadosPage = () => {
     });
 
     const totalCol = headerRow.length;
-    groupRow.push('');
-    headerRow.push('Promedio general');
+    groupRow.push('Promedio general');
+    headerRow.push('');
     merges.push({ s: { r: 0, c: totalCol }, e: { r: 1, c: totalCol } });
 
     const rows = filteredPeople.map(person => {
