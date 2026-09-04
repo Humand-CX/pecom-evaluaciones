@@ -117,9 +117,9 @@ const App = () => {
                               <Route
                                 path="/admin/resultados"
                                 element={
-                                  <ProtectedRoute><ProtectedAdminRoute>
-                                                                        <ResultadosPage />
-                                                                      </ProtectedAdminRoute></ProtectedRoute>
+                                  <ProtectedRoute>
+                                    <ResultadosPage />
+                                  </ProtectedRoute>
                                 }
                               />
                             <Route path="/error" element={<AuthErrorPage />} />

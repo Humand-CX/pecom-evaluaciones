@@ -29,6 +29,12 @@ const EVALUATOR_ITEMS: NavSectionProps['items'] = [
     path: '/evaluador/ciclos',
     icon: <IconClipboardList />,
   },
+  {
+    key: 'resultados',
+    title: 'Resultados',
+    path: '/admin/resultados',
+    icon: <IconChartBar />,
+  },
 ];
 
 const ADMIN_ITEMS: NavSectionProps['items'] = [
@@ -43,12 +49,6 @@ const ADMIN_ITEMS: NavSectionProps['items'] = [
     title: 'Banco de dimensiones',
     path: '/admin/dimensiones',
     icon: <IconRuler />,
-  },
-  {
-    key: 'resultados',
-    title: 'Resultados',
-    path: '/admin/resultados',
-    icon: <IconChartBar />,
   },
 ];
 
