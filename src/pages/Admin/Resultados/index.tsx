@@ -24,6 +24,8 @@ import Button from '@material-hu/components/design-system/Buttons/Button';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 import FormAutocomplete from '@material-hu/components/design-system/Inputs/Autocomplete/form';
 import FormInputClassic from '@material-hu/components/design-system/Inputs/Classic/form';
+import Pagination from '@material-hu/components/design-system/Inputs/Pagination';
+import Pills from '@material-hu/components/design-system/Pills';
 import Spinner from '@material-hu/components/design-system/ProgressIndicators/Spinner';
 import Table from '@material-hu/components/design-system/Table';
 import TableBody from '@material-hu/components/design-system/Table/components/TableBody';
@@ -32,6 +34,7 @@ import TableContainer from '@material-hu/components/design-system/Table/componen
 import TableHead from '@material-hu/components/design-system/Table/components/TableHead';
 import TableRow from '@material-hu/components/design-system/Table/components/TableRow';
 import Title from '@material-hu/components/design-system/Title';
+import { useDrawerLayer } from '@material-hu/components/layers/Drawers';
 
 import { useFilteredResults } from '../../../hooks/useFilteredResults';
 import {
@@ -43,6 +46,7 @@ import {
 } from '../../../hooks/useHumandSegmentation';
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
 import { useDimensions } from '../../../providers/DimensionsContext';
+import { type Dimension } from '../../Evaluador/MatrizEvaluacion/types';
 import { assignmentsService } from '../../../services/supabase/assignments';
 import { cyclesService, type Cycle as SupabaseCycle } from '../../../services/supabase/cycles';
 import {
@@ -60,6 +64,17 @@ const getScoreStyle = (score: number | undefined, theme: Theme) => {
   if (score <= 3) return { ...base, color: theme.palette.warning.dark };
   return { ...base, color: theme.palette.success.dark };
 };
+
+const averageOf = (scores: Record<string, number | null> | undefined) => {
+  if (!scores) return null;
+  const values = Object.values(scores).filter(
+    (v): v is number => v != null && v > 0,
+  );
+  if (values.length === 0) return null;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+};
+
+const ROWS_PER_PAGE = 25;
 
 type FilterOption = { value: string; label: string };
 
@@ -87,9 +102,81 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+interface PersonDetailProps {
+  person: HumandUser;
+  activeD: Dimension[];
+  scores: Record<string, number | null>;
+  evaluatorName?: string;
+  theme: Theme;
+}
+
+function PersonDetailContent({
+  person,
+  activeD,
+  scores,
+  evaluatorName,
+  theme,
+}: PersonDetailProps) {
+  return (
+    <Stack sx={{ gap: 2 }}>
+      <Stack>
+        <Typography variant="subtitle1">{fullName(person)}</Typography>
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.secondary' }}
+        >
+          {person.email}
+          {evaluatorName ? ` · Evaluador: ${evaluatorName}` : ''}
+        </Typography>
+      </Stack>
+      {activeD.map(dim => (
+        <CardContainer
+          key={dim.id}
+          padding={16}
+          noHover
+        >
+          <Stack sx={{ gap: 1.5 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ fontWeight: 700 }}
+            >
+              {dim.name}
+            </Typography>
+            {dim.subDimensions.map((sd, idx) => {
+              const score = scores[sd.id];
+              return (
+                <Stack
+                  key={sd.id}
+                  sx={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    py: 1,
+                    borderTop: idx > 0 ? '1px solid' : 'none',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="body2">{sd.name}</Typography>
+                  <Typography
+                    variant="body2"
+                    sx={getScoreStyle(score ?? undefined, theme)}
+                  >
+                    {score != null ? score : '—'}
+                  </Typography>
+                </Stack>
+              );
+            })}
+          </Stack>
+        </CardContainer>
+      ))}
+    </Stack>
+  );
+}
+
 export const ResultadosPage = () => {
   const theme = useTheme();
   const { dimensions } = useDimensions();
+  const { openDrawer, closeDrawer } = useDrawerLayer();
   const { canViewAllResults, assignedCycleIds, evaluatorId, loading: filterLoading } =
     useFilteredResults();
 
@@ -110,6 +197,7 @@ export const ResultadosPage = () => {
 
   const [selectedCycleId, setSelectedCycleId] = useState('');
   const [activeTab, setActiveTab] = useState(0);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!selectedCycleId && cyclesWithAccess.length > 0) {
@@ -203,6 +291,10 @@ export const ResultadosPage = () => {
   });
   const filters = methods.watch();
 
+  useEffect(() => {
+    setPage(1);
+  }, [filters.buscarPersona, filters.evaluador, segItemId]);
+
   const filteredPeople = useMemo(() => {
     return people.filter(person => {
       if (filters.buscarPersona) {
@@ -228,6 +320,47 @@ export const ResultadosPage = () => {
 
   const resultFor = (personId: number) =>
     selectedResults.find(r => r.person_id === String(personId));
+
+  const evaluatorNameById = (id: string) => {
+    const ev = evaluatorsInCycle.find(e => String(e.id) === id);
+    return ev ? fullName(ev) : undefined;
+  };
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredPeople.length / ROWS_PER_PAGE),
+  );
+  const paginatedPeople = filteredPeople.slice(
+    (page - 1) * ROWS_PER_PAGE,
+    page * ROWS_PER_PAGE,
+  );
+
+  const handleViewDetail = (person: HumandUser) => {
+    const result = resultFor(person.id);
+    const assignment = cycleAssignments.find(
+      a => a.person_id === String(person.id),
+    );
+    openDrawer({
+      title: fullName(person),
+      size: 'medium',
+      children: (
+        <PersonDetailContent
+          person={person}
+          activeD={activeD}
+          scores={result?.scores ?? {}}
+          evaluatorName={
+            assignment ? evaluatorNameById(assignment.evaluator_id) : undefined
+          }
+          theme={theme}
+        />
+      ),
+      primaryButtonProps: { disabled: true },
+      secondaryButtonProps: {
+        children: 'Cerrar',
+        onClick: () => closeDrawer(),
+      },
+    });
+  };
 
   const nocivos = useMemo(() => {
     return filteredPeople
@@ -319,29 +452,36 @@ export const ResultadosPage = () => {
         </Stack>
 
         {/* Selector de ciclo */}
-        <Stack sx={{ flexDirection: 'row', gap: 1, flexWrap: 'wrap' }}>
-          {cyclesWithAccess.length > 0 ? (
-            cyclesWithAccess.map(cycle => (
-              <Button
-                key={cycle.id}
-                variant={
-                  selectedCycleId === cycle.id ? 'primary' : 'secondary'
-                }
-                size="small"
-                onClick={() => {
-                  setSelectedCycleId(cycle.id);
-                  setActiveTab(0);
-                }}
-              >
-                {cycle.name}
-              </Button>
-            ))
-          ) : (
-            <Typography sx={{ color: 'text.secondary' }}>
-              No hay ciclos para mostrar.
-            </Typography>
-          )}
-        </Stack>
+        {cyclesWithAccess.length > 0 ? (
+          <FormControl
+            size="small"
+            sx={{ maxWidth: 320 }}
+          >
+            <InputLabel>Ciclo</InputLabel>
+            <Select
+              label="Ciclo"
+              value={selectedCycleId}
+              onChange={e => {
+                setSelectedCycleId(e.target.value as string);
+                setActiveTab(0);
+                setPage(1);
+              }}
+            >
+              {cyclesWithAccess.map(cycle => (
+                <MenuItem
+                  key={cycle.id}
+                  value={cycle.id}
+                >
+                  {cycle.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : (
+          <Typography sx={{ color: 'text.secondary' }}>
+            No hay ciclos para mostrar.
+          </Typography>
+        )}
 
         {assignmentsLoading ? (
           <Stack sx={{ alignItems: 'center', py: 6 }}>
@@ -730,83 +870,39 @@ export const ResultadosPage = () => {
               </Typography>
 
               {/* Tabla */}
-              <TableContainer sx={{ overflowX: 'auto' }}>
-                <Table sx={{ tableLayout: 'fixed', minWidth: 1200 }}>
-                  <colgroup>
-                    <col style={{ width: 180 }} />
-                    {subDimensions.map(sd => (
-                      <col
-                        key={sd.id}
-                        style={{ width: 52 }}
-                      />
-                    ))}
-                  </colgroup>
+              <TableContainer>
+                <Table>
                   <TableHead>
                     <TableRow>
+                      <TableCell headerCell>Nombre</TableCell>
+                      {canViewAllResults && (
+                        <TableCell headerCell>Evaluador</TableCell>
+                      )}
                       <TableCell
                         headerCell
-                        rowSpan={2}
-                        sx={{ verticalAlign: 'middle' }}
+                        sx={{ textAlign: 'center' }}
                       >
-                        Nombre
+                        Promedio
                       </TableCell>
-                      {activeD.map(dim => (
-                        <TableCell
-                          key={dim.id}
-                          headerCell
-                          colSpan={dim.subDimensions.length}
-                          sx={{
-                            textAlign: 'center',
-                            borderBottom: 0,
-                            overflow: 'hidden',
-                            whiteSpace: 'nowrap',
-                            textOverflow: 'ellipsis',
-                            fontSize: 11,
-                            px: 0.5,
-                          }}
-                        >
-                          {dim.name}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                    <TableRow>
-                      {subDimensions.map(sd => (
-                        <TableCell
-                          key={sd.id}
-                          headerCell
-                          sx={{
-                            textAlign: 'center',
-                            verticalAlign: 'bottom',
-                            pb: 1,
-                            px: 0,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              display: 'block',
-                              writingMode: 'vertical-rl',
-                              transform: 'rotate(180deg)',
-                              whiteSpace: 'nowrap',
-                              fontSize: 10,
-                              fontWeight: 600,
-                              lineHeight: 1.2,
-                              height: 160,
-                              overflow: 'hidden',
-                            }}
-                          >
-                            {sd.name}
-                          </Typography>
-                        </TableCell>
-                      ))}
+                      <TableCell
+                        headerCell
+                        sx={{ textAlign: 'center' }}
+                      >
+                        Estado
+                      </TableCell>
+                      <TableCell
+                        headerCell
+                        sx={{ textAlign: 'right' }}
+                      >
+                        {' '}
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredPeople.length === 0 ? (
+                    {paginatedPeople.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={subDimensions.length + 1}
+                          colSpan={canViewAllResults ? 5 : 4}
                           sx={{ textAlign: 'center', py: 4 }}
                         >
                           <Typography
@@ -818,20 +914,17 @@ export const ResultadosPage = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredPeople.map(person => {
+                      paginatedPeople.map(person => {
                         const result = resultFor(person.id);
+                        const avg = averageOf(result?.scores);
+                        const assignment = cycleAssignments.find(
+                          a => a.person_id === String(person.id),
+                        );
                         return (
                           <TableRow key={person.id}>
-                            <TableCell sx={{ overflow: 'hidden' }}>
+                            <TableCell>
                               <Stack>
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                  }}
-                                >
+                                <Typography variant="body2">
                                   {fullName(person)}
                                 </Typography>
                                 <Typography
@@ -842,26 +935,51 @@ export const ResultadosPage = () => {
                                 </Typography>
                               </Stack>
                             </TableCell>
-                            {subDimensions.map(sd => {
-                              const score = result?.scores[sd.id];
-                              return (
-                                <TableCell
-                                  key={sd.id}
-                                  sx={{ textAlign: 'center', px: 0 }}
+                            {canViewAllResults && (
+                              <TableCell>
+                                <Typography variant="body2">
+                                  {assignment
+                                    ? (evaluatorNameById(
+                                        assignment.evaluator_id,
+                                      ) ?? '—')
+                                    : '—'}
+                                </Typography>
+                              </TableCell>
+                            )}
+                            <TableCell sx={{ textAlign: 'center' }}>
+                              {avg != null ? (
+                                <Typography
+                                  variant="body2"
+                                  sx={getScoreStyle(avg, theme)}
                                 >
-                                  {score != null ? (
-                                    <Typography
-                                      variant="body2"
-                                      sx={getScoreStyle(score, theme)}
-                                    >
-                                      {score}
-                                    </Typography>
-                                  ) : (
-                                    '—'
-                                  )}
-                                </TableCell>
-                              );
-                            })}
+                                  {avg.toFixed(1)}
+                                </Typography>
+                              ) : (
+                                '—'
+                              )}
+                            </TableCell>
+                            <TableCell sx={{ textAlign: 'center' }}>
+                              <Pills
+                                label={
+                                  result?.submitted_at
+                                    ? 'Completado'
+                                    : 'Pendiente'
+                                }
+                                type={
+                                  result?.submitted_at ? 'success' : 'neutral'
+                                }
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell sx={{ textAlign: 'right' }}>
+                              <Button
+                                variant="text"
+                                size="small"
+                                onClick={() => handleViewDetail(person)}
+                              >
+                                Ver detalle
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         );
                       })
@@ -869,6 +987,14 @@ export const ResultadosPage = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+
+              {filteredPeople.length > ROWS_PER_PAGE && (
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onChangePage={setPage}
+                />
+              )}
             </TabPanel>
 
             {/* TAB 3: Alertas Nocivo */}
