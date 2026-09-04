@@ -379,18 +379,76 @@ export const ResultadosPage = () => {
 
   const handleExportExcel = () => {
     const cycleName = selectedCycle?.name ?? selectedCycleId;
-    const headers = ['Nombre', 'Email', ...subDimensions.map(sd => sd.name)];
-    const rows = filteredPeople.map(person => {
-      const result = resultFor(person.id);
-      return [
-        fullName(person),
-        person.email ?? '',
-        ...subDimensions.map(sd => result?.scores[sd.id] ?? ''),
-      ];
+    const FIXED_COLS = ['Nombre', 'Email', 'Evaluador', 'Estado'];
+
+    // Fila 1: nombre de cada dimensión, ocupando sus sub-dimensiones + su promedio
+    // Fila 2: columnas fijas + nombre de cada sub-dimensión + "Promedio" (por dimensión) + "Promedio general"
+    const groupRow: (string | number)[] = [...FIXED_COLS.map(() => '')];
+    const headerRow: (string | number)[] = [...FIXED_COLS];
+    const merges: { s: { r: number; c: number }; e: { r: number; c: number } }[] =
+      FIXED_COLS.map((_, i) => ({
+        s: { r: 0, c: i },
+        e: { r: 1, c: i },
+      }));
+
+    activeD.forEach(dim => {
+      const start = headerRow.length;
+      dim.subDimensions.forEach(sd => {
+        groupRow.push('');
+        headerRow.push(sd.name);
+      });
+      groupRow.push(dim.name);
+      headerRow.push('Promedio');
+      const span = dim.subDimensions.length + 1;
+      merges.push({
+        s: { r: 0, c: start },
+        e: { r: 0, c: start + span - 1 },
+      });
     });
 
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    ws['!cols'] = headers.map((_, i) => ({ wch: i < 2 ? 24 : 12 }));
+    const totalCol = headerRow.length;
+    groupRow.push('');
+    headerRow.push('Promedio general');
+    merges.push({ s: { r: 0, c: totalCol }, e: { r: 1, c: totalCol } });
+
+    const rows = filteredPeople.map(person => {
+      const result = resultFor(person.id);
+      const assignment = cycleAssignments.find(
+        a => a.person_id === String(person.id),
+      );
+      const evaluatorName = assignment
+        ? (evaluatorNameById(assignment.evaluator_id) ?? '')
+        : '';
+      const estado = result?.submitted_at ? 'Completado' : 'Pendiente';
+
+      const row: (string | number)[] = [
+        fullName(person),
+        person.email ?? '',
+        evaluatorName,
+        estado,
+      ];
+
+      activeD.forEach(dim => {
+        dim.subDimensions.forEach(sd => {
+          row.push(result?.scores[sd.id] ?? '');
+        });
+        const dimAvg = averageOf(
+          Object.fromEntries(
+            dim.subDimensions.map(sd => [sd.id, result?.scores[sd.id] ?? null]),
+          ),
+        );
+        row.push(dimAvg != null ? Number(dimAvg.toFixed(1)) : '');
+      });
+
+      const overallAvg = averageOf(result?.scores);
+      row.push(overallAvg != null ? Number(overallAvg.toFixed(1)) : '');
+
+      return row;
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([groupRow, headerRow, ...rows]);
+    ws['!merges'] = merges;
+    ws['!cols'] = headerRow.map((_, i) => ({ wch: i < 2 ? 24 : 14 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Resultados');
     XLSX.writeFile(wb, `resultados-${cycleName}.xlsx`);
@@ -731,20 +789,8 @@ export const ResultadosPage = () => {
                   sx={{ width: '100%' }}
                 >
                   <Stack sx={{ gap: 2 }}>
-                    <Stack
-                      sx={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <Typography variant="subtitle2">
-                        Filtros
-                        {activeFiltersCount > 0
-                          ? ` (${activeFiltersCount} activos)`
-                          : ''}
-                      </Typography>
-                      {activeFiltersCount > 0 && (
+                    {activeFiltersCount > 0 && (
+                      <Stack sx={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
                         <Button
                           variant="text"
                           size="small"
@@ -756,8 +802,8 @@ export const ResultadosPage = () => {
                         >
                           Limpiar filtros
                         </Button>
-                      )}
-                    </Stack>
+                      </Stack>
+                    )}
                     <Stack
                       sx={{
                         flexDirection: { xs: 'column', sm: 'row' },
@@ -859,15 +905,6 @@ export const ResultadosPage = () => {
                   </Stack>
                 </CardContainer>
               </FormProvider>
-
-              {/* Resultado count */}
-              <Typography
-                variant="body2"
-                sx={{ color: 'text.secondary' }}
-              >
-                {filteredPeople.length}{' '}
-                {filteredPeople.length === 1 ? 'persona' : 'personas'}
-              </Typography>
 
               {/* Tabla */}
               <TableContainer>
