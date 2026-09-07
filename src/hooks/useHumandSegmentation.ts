@@ -216,6 +216,69 @@ export function useSegmentationItems(groupId: number | null) {
   return { items, loading };
 }
 
+interface UserBossRow {
+  userId: number;
+  bossId: number;
+}
+
+// Jefe directo de cada persona, según la tabla `user_bosses` de Humand
+// (relación userId -> bossId, uno a uno).
+export function useDirectBosses(personIds: string[]) {
+  const key = [...new Set(personIds)].sort().join(',');
+  const [bossIdByPerson, setBossIdByPerson] = useState<Record<string, number>>(
+    {},
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!key) {
+      setBossIdByPerson({});
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    postgrest
+      .get<UserBossRow>('user_bosses', {
+        userId: `in.(${key})`,
+        select: 'userId,bossId',
+      })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const map: Record<string, number> = {};
+        data.forEach(row => {
+          map[String(row.userId)] = row.bossId;
+        });
+        setBossIdByPerson(map);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+
+  const bossIdsKey = [...new Set(Object.values(bossIdByPerson))]
+    .sort((a, b) => a - b)
+    .join(',');
+  const { users: bossUsers, loading: bossUsersLoading } = useHumandUsersByIds(
+    bossIdsKey ? bossIdsKey.split(',') : [],
+  );
+
+  const bosses = useMemo(() => {
+    const byId = new Map(bossUsers.map(u => [u.id, u]));
+    const result: Record<string, HumandUser | null> = {};
+    personIds.forEach(pid => {
+      const bossId = bossIdByPerson[pid];
+      result[pid] = bossId != null ? (byId.get(bossId) ?? null) : null;
+    });
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personIds.join(','), bossIdByPerson, bossUsers]);
+
+  return { bosses, loading: loading || bossUsersLoading };
+}
+
 // Personas de un ciclo = miembros del/los segmentos elegidos, más las
 // agregadas a mano, menos las excluidas a mano — así el admin puede ajustar
 // la lista puntualmente sin depender 100% de la segmentación de Humand.

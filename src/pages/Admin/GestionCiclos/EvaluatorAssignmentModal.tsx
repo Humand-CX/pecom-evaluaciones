@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Alert from '@material-hu/mui/Alert';
 import Autocomplete from '@material-hu/mui/Autocomplete';
@@ -16,6 +16,7 @@ import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignments
 import {
   type HumandUser,
   useCyclePeople,
+  useDirectBosses,
   useHumandUsers,
 } from '../../../hooks/useHumandSegmentation';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
@@ -29,13 +30,73 @@ type EvaluatorAssignmentModalProps = {
 
 const fullName = (u: HumandUser) => `${u.firstName} ${u.lastName}`.trim();
 
+type AssignmentMode = 'manual' | 'individual' | 'masivo';
+
+const PersonEvaluatorRow = ({
+  person,
+  boss,
+  value,
+  onChange,
+}: {
+  person: HumandUser;
+  boss: HumandUser | null;
+  value: HumandUser | null;
+  onChange: (user: HumandUser | null) => void;
+}) => {
+  const [search, setSearch] = useState('');
+  const { users: options, loading } = useHumandUsers(search);
+
+  return (
+    <Stack
+      sx={{
+        flexDirection: 'row',
+        gap: 2,
+        alignItems: 'center',
+        py: 1,
+        borderTop: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Stack sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="body2">{fullName(person)}</Typography>
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.secondary' }}
+        >
+          {boss ? `Jefe directo: ${fullName(boss)}` : 'Sin jefe directo cargado'}
+        </Typography>
+      </Stack>
+      <Stack sx={{ flex: 1, minWidth: 0 }}>
+        <Autocomplete
+          size="small"
+          options={options}
+          getOptionLabel={fullName}
+          isOptionEqualToValue={(a, b) => a.id === b.id}
+          value={value}
+          onChange={(_, val) => onChange(val)}
+          inputValue={search}
+          onInputChange={(_, val) => setSearch(val)}
+          loading={loading}
+          renderInput={params => (
+            <TextField
+              {...params}
+              placeholder="Evaluador"
+            />
+          )}
+          fullWidth
+        />
+      </Stack>
+    </Stack>
+  );
+};
+
 export const EvaluatorAssignmentModal = ({
   cycle,
   onSuccess,
 }: EvaluatorAssignmentModalProps) => {
   const { addBulkAssignments } = useEvaluatorAssignments();
 
-  const [mode, setMode] = useState<'manual' | 'masivo'>('manual');
+  const [mode, setMode] = useState<AssignmentMode>('manual');
   const [selectedEvaluator, setSelectedEvaluator] = useState<HumandUser | null>(
     null,
   );
@@ -50,6 +111,29 @@ export const EvaluatorAssignmentModal = ({
   );
   const { users: evaluatorOptions, loading: evaluatorsLoading } =
     useHumandUsers(evaluatorSearch);
+
+  const personIds = cyclePersons.map(p => String(p.id));
+  const { bosses, loading: bossesLoading } = useDirectBosses(personIds);
+  const [individualSelection, setIndividualSelection] = useState<
+    Record<string, HumandUser | null>
+  >({});
+
+  // Precarga cada persona con su jefe directo como sugerencia editable
+  useEffect(() => {
+    if (bossesLoading) return;
+    setIndividualSelection(prev => {
+      const next = { ...prev };
+      let changed = false;
+      personIds.forEach(pid => {
+        if (!(pid in next)) {
+          next[pid] = bosses[pid] ?? null;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personIds.join(','), bossesLoading]);
 
   const handleManualAssign = async () => {
     if (!selectedEvaluator) return;
@@ -85,6 +169,58 @@ export const EvaluatorAssignmentModal = ({
     }
   };
 
+  const handleUseDirectBossForAll = () => {
+    setIndividualSelection(prev => {
+      const next = { ...prev };
+      personIds.forEach(pid => {
+        next[pid] = bosses[pid] ?? null;
+      });
+      return next;
+    });
+  };
+
+  const individualAssignedCount = personIds.filter(
+    pid => individualSelection[pid],
+  ).length;
+
+  const handleIndividualAssign = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const assignments = [];
+
+      cyclePersons.forEach(person => {
+        const evaluator = individualSelection[String(person.id)];
+        if (!evaluator) return;
+        cycle.dimensionIds.forEach(dimensionId => {
+          assignments.push({
+            id: `${cycle.id}-${dimensionId}-${evaluator.id}-${person.id}`,
+            cycleId: cycle.id,
+            dimensionId,
+            evaluatorId: String(evaluator.id),
+            personId: String(person.id),
+          });
+        });
+      });
+
+      if (assignments.length === 0) {
+        setError('Elegí al menos un evaluador para alguna persona.');
+        return;
+      }
+
+      await addBulkAssignments(assignments);
+      onSuccess();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo guardar la asignación.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (mode === 'masivo') {
     return (
       <CSVImportModal
@@ -105,12 +241,17 @@ export const EvaluatorAssignmentModal = ({
           <Typography variant="subtitle2">Modo de asignación</Typography>
           <RadioGroup
             value={mode}
-            onChange={e => setMode(e.target.value as 'manual' | 'masivo')}
+            onChange={e => setMode(e.target.value as AssignmentMode)}
           >
             <FormControlLabel
               value="manual"
               control={<Radio />}
               label="Manual: Un evaluador para todo"
+            />
+            <FormControlLabel
+              value="individual"
+              control={<Radio />}
+              label="Individual: Elegir evaluador por persona"
             />
             <FormControlLabel
               value="masivo"
@@ -154,6 +295,60 @@ export const EvaluatorAssignmentModal = ({
               variant="primary"
               disabled={!selectedEvaluator || loading}
               onClick={handleManualAssign}
+            >
+              {loading ? 'Asignando...' : 'Asignar'}
+            </Button>
+          </Stack>
+        </CardContainer>
+      )}
+
+      {mode === 'individual' && (
+        <CardContainer padding={16}>
+          <Stack sx={{ gap: 2 }}>
+            <Stack
+              sx={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Typography variant="subtitle2">
+                {individualAssignedCount} de {cyclePersons.length} personas con
+                evaluador elegido
+              </Typography>
+              <Button
+                variant="text"
+                size="small"
+                onClick={handleUseDirectBossForAll}
+                disabled={bossesLoading}
+              >
+                Usar jefe directo para todos
+              </Button>
+            </Stack>
+
+            <Stack sx={{ maxHeight: 400, overflowY: 'auto' }}>
+              {cyclePersons.map(person => (
+                <PersonEvaluatorRow
+                  key={person.id}
+                  person={person}
+                  boss={bosses[String(person.id)] ?? null}
+                  value={individualSelection[String(person.id)] ?? null}
+                  onChange={user =>
+                    setIndividualSelection(prev => ({
+                      ...prev,
+                      [String(person.id)]: user,
+                    }))
+                  }
+                />
+              ))}
+            </Stack>
+
+            {error && <Alert severity="error">{error}</Alert>}
+
+            <Button
+              variant="primary"
+              disabled={individualAssignedCount === 0 || loading}
+              onClick={handleIndividualAssign}
             >
               {loading ? 'Asignando...' : 'Asignar'}
             </Button>
