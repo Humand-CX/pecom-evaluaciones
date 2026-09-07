@@ -56,6 +56,10 @@ export const cyclesService = {
   },
 
   async delete(id: string) {
+    // evaluator_assignments/evaluation_results tienen FK a cycles sin cascade,
+    // así que hay que borrarlos primero o el delete del ciclo falla.
+    await supabase.from('evaluation_results').delete().eq('cycle_id', id);
+    await supabase.from('evaluator_assignments').delete().eq('cycle_id', id);
     const { error } = await supabase.from('cycles').delete().eq('id', id);
     if (error) throw error;
   },

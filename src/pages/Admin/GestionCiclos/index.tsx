@@ -7,6 +7,7 @@ import {
   IconLock,
   IconPlayerPlay,
   IconPlus,
+  IconTrash,
   IconUsers,
 } from '@material-hu/icons/tabler';
 import IconButton from '@material-hu/mui/IconButton';
@@ -22,6 +23,7 @@ import TableContainer from '@material-hu/components/design-system/Table/componen
 import TableHead from '@material-hu/components/design-system/Table/components/TableHead';
 import TableRow from '@material-hu/components/design-system/Table/components/TableRow';
 import Title from '@material-hu/components/design-system/Title';
+import { useDialogLayer } from '@material-hu/components/layers/Dialogs';
 import { useDrawerLayer } from '@material-hu/components/layers/Drawers';
 import { useMenuLayer } from '@material-hu/components/layers/Menus';
 
@@ -49,6 +51,7 @@ export const GestionCiclosPage = () => {
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [loading, setLoading] = useState(true);
   const { openDrawer, closeDrawer } = useDrawerLayer();
+  const { openDialog, closeDialog } = useDialogLayer();
   const { openMenu } = useMenuLayer();
   const { dimensions } = useDimensions();
 
@@ -107,6 +110,26 @@ export const GestionCiclosPage = () => {
     setCycles(prev =>
       prev.map(c => (c.id === cycle.id ? { ...c, status: 'closed' } : c)),
     );
+  };
+
+  const handleDelete = (cycle: Cycle) => {
+    openDialog({
+      title: `¿Eliminar "${cycle.name}"?`,
+      textBody:
+        'Se eliminarán también todas las asignaciones y evaluaciones cargadas para este ciclo. Esta acción no se puede deshacer.',
+      primaryButtonProps: {
+        children: 'Eliminar',
+        onClick: async () => {
+          await cyclesService.delete(cycle.id);
+          setCycles(prev => prev.filter(c => c.id !== cycle.id));
+          closeDialog();
+        },
+      },
+      secondaryButtonProps: {
+        children: 'Cancelar',
+        onClick: () => closeDialog(),
+      },
+    });
   };
 
   const handleEdit = (cycle: Cycle) => {
@@ -242,6 +265,12 @@ export const GestionCiclosPage = () => {
           title: 'Cerrar',
           icon: IconLock,
           onSelect: () => handleClose(item),
+        },
+        {
+          id: 'delete',
+          title: 'Eliminar',
+          icon: IconTrash,
+          onSelect: () => handleDelete(item),
         },
       ],
     });
