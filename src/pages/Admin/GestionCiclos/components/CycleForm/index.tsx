@@ -5,8 +5,8 @@ import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Checkbox from '@material-hu/mui/Checkbox';
 import FormControl from '@material-hu/mui/FormControl';
-import FormControlLabel from '@material-hu/mui/FormControlLabel';
 import InputLabel from '@material-hu/mui/InputLabel';
+import ListItemText from '@material-hu/mui/ListItemText';
 import MenuItem from '@material-hu/mui/MenuItem';
 import Select from '@material-hu/mui/Select';
 import Stack from '@material-hu/mui/Stack';
@@ -86,43 +86,54 @@ export const CycleForm = ({
           <CardContainer padding={16}>
             <Stack sx={{ gap: 1.5 }}>
               <Typography variant="subtitle2">Dimensiones*</Typography>
-              <Controller
-                name="dimensionIds"
-                control={control}
-                render={({ field }) => (
-                  <Stack sx={{ gap: 1 }}>
-                    {dimensions.length === 0 ? (
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'text.secondary' }}
+              {dimensions.length === 0 ? (
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'text.secondary' }}
+                >
+                  No hay dimensiones disponibles. Creá algunas en el Banco de
+                  dimensiones.
+                </Typography>
+              ) : (
+                <Controller
+                  name="dimensionIds"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl
+                      fullWidth
+                      size="small"
+                    >
+                      <InputLabel>Dimensiones</InputLabel>
+                      <Select
+                        multiple
+                        label="Dimensiones"
+                        value={field.value}
+                        onChange={e => field.onChange(e.target.value)}
+                        renderValue={selected =>
+                          (selected as string[])
+                            .map(
+                              id =>
+                                dimensions.find(d => d.id === id)?.name ?? id,
+                            )
+                            .join(', ')
+                        }
                       >
-                        No hay dimensiones disponibles. Creá algunas en el Banco
-                        de dimensiones.
-                      </Typography>
-                    ) : (
-                      dimensions.map(dimension => (
-                        <FormControlLabel
-                          key={dimension.id}
-                          control={
+                        {dimensions.map(dimension => (
+                          <MenuItem
+                            key={dimension.id}
+                            value={dimension.id}
+                          >
                             <Checkbox
                               checked={field.value.includes(dimension.id)}
-                              onChange={e => {
-                                const newValue = e.target.checked
-                                  ? [...field.value, dimension.id]
-                                  : field.value.filter(
-                                      id => id !== dimension.id,
-                                    );
-                                field.onChange(newValue);
-                              }}
                             />
-                          }
-                          label={dimension.name}
-                        />
-                      ))
-                    )}
-                  </Stack>
-                )}
-              />
+                            <ListItemText primary={dimension.name} />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              )}
               {dimensionError && (
                 <Typography
                   variant="caption"
@@ -161,57 +172,71 @@ export const CycleForm = ({
                 </Select>
               </FormControl>
 
-              <Controller
-                name="segmentIds"
-                control={control}
-                render={({ field }) => (
-                  <Stack sx={{ gap: 1 }}>
-                    {selectedGroupId == null ? (
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'text.secondary' }}
+              {selectedGroupId == null ? (
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'text.secondary' }}
+                >
+                  Elegí un grupo de segmentación para ver sus opciones.
+                </Typography>
+              ) : itemsLoading ? (
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'text.secondary' }}
+                >
+                  Cargando...
+                </Typography>
+              ) : items.length === 0 ? (
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'text.secondary' }}
+                >
+                  Este grupo no tiene opciones.
+                </Typography>
+              ) : (
+                <Controller
+                  name="segmentIds"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl
+                      fullWidth
+                      size="small"
+                    >
+                      <InputLabel>Ítems del segmento</InputLabel>
+                      <Select
+                        multiple
+                        label="Ítems del segmento"
+                        value={field.value}
+                        onChange={e => field.onChange(e.target.value)}
+                        renderValue={selected =>
+                          (selected as string[])
+                            .map(
+                              id =>
+                                items.find(i => String(i.id) === id)?.name ??
+                                id,
+                            )
+                            .join(', ')
+                        }
                       >
-                        Elegí un grupo de segmentación para ver sus opciones.
-                      </Typography>
-                    ) : itemsLoading ? (
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        Cargando...
-                      </Typography>
-                    ) : items.length === 0 ? (
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        Este grupo no tiene opciones.
-                      </Typography>
-                    ) : (
-                      items.map(item => {
-                        const itemId = String(item.id);
-                        return (
-                          <FormControlLabel
-                            key={itemId}
-                            control={
+                        {items.map(item => {
+                          const itemId = String(item.id);
+                          return (
+                            <MenuItem
+                              key={itemId}
+                              value={itemId}
+                            >
                               <Checkbox
                                 checked={field.value.includes(itemId)}
-                                onChange={e => {
-                                  const newValue = e.target.checked
-                                    ? [...field.value, itemId]
-                                    : field.value.filter(id => id !== itemId);
-                                  field.onChange(newValue);
-                                }}
                               />
-                            }
-                            label={item.name}
-                          />
-                        );
-                      })
-                    )}
-                  </Stack>
-                )}
-              />
+                              <ListItemText primary={item.name} />
+                            </MenuItem>
+                          );
+                        })}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              )}
               {segmentError && (
                 <Typography
                   variant="caption"

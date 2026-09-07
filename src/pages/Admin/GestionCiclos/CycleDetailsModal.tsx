@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import Stack from '@material-hu/mui/Stack';
-import { useTheme } from '@material-hu/mui/styles';
 import Typography from '@material-hu/mui/Typography';
 
 import CardContainer from '@material-hu/components/design-system/CardContainer';
@@ -19,9 +18,11 @@ import {
   useCyclePeople,
   useUserNames,
 } from '../../../hooks/useHumandSegmentation';
+import {
+  evaluationResultsService,
+  type EvaluationResultRow,
+} from '../../../services/supabase/evaluationResults';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
-import { DIMENSIONS } from '../../Evaluador/MatrizEvaluacion/constants';
-import { MOCK_RESULTS } from '../Resultados/constants';
 
 type CycleDetailsModalProps = {
   cycle: Cycle;
@@ -31,12 +32,10 @@ const fullName = (u: { firstName: string; lastName: string }) =>
   `${u.firstName} ${u.lastName}`.trim();
 
 export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
-  const theme = useTheme();
   const { dimensions } = useDimensions();
   const { assignments } = useEvaluatorAssignments();
 
-  const allDimensions = dimensions.length > 0 ? dimensions : DIMENSIONS;
-  const cycleDimensions = allDimensions.filter(d =>
+  const cycleDimensions = dimensions.filter(d =>
     cycle.dimensionIds.includes(d.id),
   );
   const subDimensionCount = cycleDimensions.reduce(
@@ -56,8 +55,11 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
     .map(a => a.evaluatorId);
   const evaluatorNames = useUserNames(cycleEvaluatorIds);
 
-  // Get all results for this cycle
-  const cycleResults = MOCK_RESULTS.filter(r => r.cycleId === cycle.id);
+  // Resultados reales del ciclo (todos los evaluadores)
+  const [cycleResults, setCycleResults] = useState<EvaluationResultRow[]>([]);
+  useEffect(() => {
+    evaluationResultsService.getByCycle(cycle.id).then(setCycleResults);
+  }, [cycle.id]);
 
   // Calculate completion stats
   const evaluationStats = useMemo(() => {
@@ -65,7 +67,9 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
     let totalCompleted = 0;
 
     cyclePersons.forEach(person => {
-      const result = cycleResults.find(r => r.personId === String(person.id));
+      const result = cycleResults.find(
+        r => r.person_id === String(person.id),
+      );
       if (result) {
         const completedCount = Object.values(result.scores).filter(
           score => score != null,
@@ -90,12 +94,11 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
       ...new Set(personAssignments.map(a => a.evaluatorId)),
     ];
 
-    const result = cycleResults.find(r => r.personId === String(person.id));
+    const result = cycleResults.find(r => r.person_id === String(person.id));
     const completedScores = result
       ? Object.values(result.scores).filter(score => score != null).length
       : 0;
-    const isCompleted =
-      completedScores === subDimensionCount && subDimensionCount > 0;
+    const isCompleted = !!result?.submitted_at;
 
     return {
       person,
