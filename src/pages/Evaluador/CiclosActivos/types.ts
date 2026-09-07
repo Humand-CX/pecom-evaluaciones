@@ -9,4 +9,6 @@ export type Cycle = {
   status: CycleStatus;
   dimensionIds: string[];
   segmentIds: string[];
+  addedPersonIds: string[];
+  excludedPersonIds: string[];
 };

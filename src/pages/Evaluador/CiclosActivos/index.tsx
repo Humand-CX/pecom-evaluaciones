@@ -25,6 +25,8 @@ const toFrontendCycle = (row: SupabaseCycle): Cycle => ({
   status: row.status,
   dimensionIds: row.dimension_ids ?? [],
   segmentIds: row.segment_ids ?? [],
+  addedPersonIds: row.added_person_ids ?? [],
+  excludedPersonIds: row.excluded_person_ids ?? [],
 });
 
 export default function CiclosActivosPage() {

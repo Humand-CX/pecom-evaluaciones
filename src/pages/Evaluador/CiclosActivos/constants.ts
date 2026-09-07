@@ -28,6 +28,8 @@ export const MOCK_CYCLES: Cycle[] = [
     status: 'active',
     dimensionIds: ['disciplina', 'conocimiento', 'actitud'],
     segmentIds: ['seg-gerentes', 'seg-operarios'],
+    addedPersonIds: [],
+    excludedPersonIds: [],
   },
   {
     id: '2',
@@ -38,6 +40,8 @@ export const MOCK_CYCLES: Cycle[] = [
     status: 'active',
     dimensionIds: ['disciplina', 'conocimiento'],
     segmentIds: ['seg-operarios'],
+    addedPersonIds: [],
+    excludedPersonIds: [],
   },
   {
     id: '3',
@@ -48,5 +52,7 @@ export const MOCK_CYCLES: Cycle[] = [
     status: 'closed',
     dimensionIds: ['disciplina', 'actitud'],
     segmentIds: ['seg-gerentes'],
+    addedPersonIds: [],
+    excludedPersonIds: [],
   },
 ];

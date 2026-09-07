@@ -7,6 +7,7 @@ import {
   IconLock,
   IconPlayerPlay,
   IconPlus,
+  IconUsers,
 } from '@material-hu/icons/tabler';
 import IconButton from '@material-hu/mui/IconButton';
 import Stack from '@material-hu/mui/Stack';
@@ -26,14 +27,16 @@ import { useMenuLayer } from '@material-hu/components/layers/Menus';
 
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
 import { useDimensions } from '../../../providers/DimensionsContext';
-import { cyclesService, type Cycle as SupabaseCycle } from '../../../services/supabase/cycles';
+import { cyclesService } from '../../../services/supabase/cycles';
 import { STATUS_CONFIG } from '../../Evaluador/CiclosActivos/constants';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
 
 import { CycleDetailsModal } from './CycleDetailsModal';
 import { CycleForm } from './components/CycleForm';
 import { EvaluatorAssignmentModal } from './EvaluatorAssignmentModal';
+import { ManagePeopleModal } from './ManagePeopleModal';
 import { type CycleFormValues } from './schema';
+import { toFrontendCycle } from './utils';
 
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString('es-AR', {
@@ -41,17 +44,6 @@ const formatDate = (dateStr: string) =>
     month: 'short',
     year: 'numeric',
   });
-
-const toFrontendCycle = (row: SupabaseCycle): Cycle => ({
-  id: row.id,
-  name: row.name,
-  project_name: row.project_name ?? '',
-  start_date: row.start_date ?? '',
-  end_date: row.end_date ?? '',
-  status: row.status,
-  dimensionIds: row.dimension_ids ?? [],
-  segmentIds: row.segment_ids ?? [],
-});
 
 export const GestionCiclosPage = () => {
   const [cycles, setCycles] = useState<Cycle[]>([]);
@@ -200,6 +192,29 @@ export const GestionCiclosPage = () => {
     });
   };
 
+  const handleManagePeople = (cycle: Cycle) => {
+    openDrawer({
+      title: `${cycle.name} - Personas del ciclo`,
+      size: 'medium',
+      children: (
+        <ManagePeopleModal
+          cycle={cycle}
+          onUpdated={updated => {
+            setCycles(prev =>
+              prev.map(c => (c.id === updated.id ? updated : c)),
+            );
+            closeDrawer();
+          }}
+        />
+      ),
+      primaryButtonProps: { disabled: true },
+      secondaryButtonProps: {
+        children: 'Cerrar',
+        onClick: () => closeDrawer(),
+      },
+    });
+  };
+
   const handleOpenMenu = (e: React.MouseEvent<HTMLElement>, item: Cycle) => {
     openMenu({
       anchorEl: e.currentTarget,
@@ -209,6 +224,12 @@ export const GestionCiclosPage = () => {
           title: 'Editar',
           icon: IconEdit,
           onSelect: () => handleEdit(item),
+        },
+        {
+          id: 'people',
+          title: 'Gestionar personas',
+          icon: IconUsers,
+          onSelect: () => handleManagePeople(item),
         },
         {
           id: 'activate',

@@ -9,6 +9,8 @@ export interface Cycle {
   status: 'draft' | 'active' | 'closed';
   dimension_ids?: string[];
   segment_ids?: string[];
+  added_person_ids?: string[];
+  excluded_person_ids?: string[];
   created_at?: string;
 }
 

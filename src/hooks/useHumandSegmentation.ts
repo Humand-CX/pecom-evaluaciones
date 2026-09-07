@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { postgrest } from '../services/postgrest';
 
@@ -214,4 +214,33 @@ export function useSegmentationItems(groupId: number | null) {
   }, [groupId]);
 
   return { items, loading };
+}
+
+// Personas de un ciclo = miembros del/los segmentos elegidos, más las
+// agregadas a mano, menos las excluidas a mano — así el admin puede ajustar
+// la lista puntualmente sin depender 100% de la segmentación de Humand.
+export function useCyclePeople(
+  segmentIds: string[],
+  addedPersonIds: string[],
+  excludedPersonIds: string[],
+) {
+  const { members: segmentMembers, loading: segmentsLoading } =
+    useSegmentMembers(segmentIds);
+  const { users: addedUsers, loading: addedLoading } =
+    useHumandUsersByIds(addedPersonIds);
+
+  const excludedKey = [...new Set(excludedPersonIds)].sort().join(',');
+
+  const members = useMemo(() => {
+    const excludedSet = new Set(excludedKey ? excludedKey.split(',') : []);
+    const byId = new Map<number, HumandUser>();
+    segmentMembers.forEach(u => byId.set(u.id, u));
+    addedUsers.forEach(u => byId.set(u.id, u));
+    return [...byId.values()]
+      .filter(u => !excludedSet.has(String(u.id)))
+      .sort((a, b) => a.firstName.localeCompare(b.firstName));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [segmentMembers, addedUsers, excludedKey]);
+
+  return { members, loading: segmentsLoading || addedLoading };
 }

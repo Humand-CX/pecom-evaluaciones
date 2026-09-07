@@ -16,7 +16,7 @@ import TableRow from '@material-hu/components/design-system/Table/components/Tab
 import { useDimensions } from '../../../providers/DimensionsContext';
 import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
 import {
-  useSegmentMembers,
+  useCyclePeople,
   useUserNames,
 } from '../../../hooks/useHumandSegmentation';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
@@ -44,8 +44,12 @@ export const CycleDetailsModal = ({ cycle }: CycleDetailsModalProps) => {
     0,
   );
 
-  // Get persons from selected segments (real Humand users)
-  const { members: cyclePersons } = useSegmentMembers(cycle.segmentIds);
+  // Get persons from selected segments (real Humand users), con overrides manuales
+  const { members: cyclePersons } = useCyclePeople(
+    cycle.segmentIds,
+    cycle.addedPersonIds,
+    cycle.excludedPersonIds,
+  );
 
   const cycleEvaluatorIds = assignments
     .filter(a => a.cycleId === cycle.id)

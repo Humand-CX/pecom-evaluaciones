@@ -8,7 +8,7 @@ import Button from '@material-hu/components/design-system/Buttons/Button';
 import CardContainer from '@material-hu/components/design-system/CardContainer';
 
 import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
-import { useSegmentMembers } from '../../../hooks/useHumandSegmentation';
+import { useCyclePeople } from '../../../hooks/useHumandSegmentation';
 import { postgrest } from '../../../services/postgrest';
 import { type EvaluatorAssignment } from '../../../types/evaluatorAssignments';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
@@ -70,7 +70,11 @@ export const CSVImportModal = ({
   onImportSuccess,
 }: CSVImportModalProps) => {
   const { addBulkAssignments } = useEvaluatorAssignments();
-  const { members: cyclePersons } = useSegmentMembers(cycle.segmentIds);
+  const { members: cyclePersons } = useCyclePeople(
+    cycle.segmentIds,
+    cycle.addedPersonIds,
+    cycle.excludedPersonIds,
+  );
 
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [preview, setPreview] = useState<CSVRow[]>([]);

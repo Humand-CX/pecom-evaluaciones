@@ -15,8 +15,8 @@ import CardContainer from '@material-hu/components/design-system/CardContainer';
 import { useEvaluatorAssignments } from '../../../providers/EvaluatorAssignmentsContext';
 import {
   type HumandUser,
+  useCyclePeople,
   useHumandUsers,
-  useSegmentMembers,
 } from '../../../hooks/useHumandSegmentation';
 import { type Cycle } from '../../Evaluador/CiclosActivos/types';
 
@@ -43,7 +43,11 @@ export const EvaluatorAssignmentModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { members: cyclePersons } = useSegmentMembers(cycle.segmentIds);
+  const { members: cyclePersons } = useCyclePeople(
+    cycle.segmentIds,
+    cycle.addedPersonIds,
+    cycle.excludedPersonIds,
+  );
   const { users: evaluatorOptions, loading: evaluatorsLoading } =
     useHumandUsers(evaluatorSearch);
 
