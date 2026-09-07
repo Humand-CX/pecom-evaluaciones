@@ -8,6 +8,7 @@ import {
   IconPlus,
   IconRuler,
   IconTrash,
+  IconUpload,
 } from '@material-hu/icons/tabler';
 import IconButton from '@material-hu/mui/IconButton';
 import Stack from '@material-hu/mui/Stack';
@@ -25,6 +26,7 @@ import { useMenuLayer } from '@material-hu/components/layers/Menus';
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
 import { useDimensions } from '../../../providers/DimensionsContext';
 
+import { DimensionsCSVImportModal } from './DimensionsCSVImportModal';
 import {
   type NameFormValues,
   nameSchema,
@@ -123,6 +125,19 @@ export const DimensionesPage = () => {
   const { openDrawer, closeDrawer } = useDrawerLayer();
   const { openDialog, closeDialog } = useDialogLayer();
   const { openMenu } = useMenuLayer();
+
+  const handleImportCSV = () => {
+    openDrawer({
+      title: 'Cargar dimensiones por CSV',
+      size: 'medium',
+      children: <DimensionsCSVImportModal onImportSuccess={closeDrawer} />,
+      primaryButtonProps: { disabled: true },
+      secondaryButtonProps: {
+        children: 'Cerrar',
+        onClick: () => closeDrawer(),
+      },
+    });
+  };
 
   const handleNewDimension = () => {
     openDrawer({
@@ -355,12 +370,21 @@ export const DimensionesPage = () => {
             title="Banco de dimensiones"
             description="Administrá las dimensiones y sub-dimensiones de evaluación."
           />
-          <Button
-            startIcon={<IconPlus />}
-            onClick={handleNewDimension}
-          >
-            Nueva dimensión
-          </Button>
+          <Stack sx={{ flexDirection: 'row', gap: 1 }}>
+            <Button
+              variant="secondary"
+              startIcon={<IconUpload />}
+              onClick={handleImportCSV}
+            >
+              Cargar CSV
+            </Button>
+            <Button
+              startIcon={<IconPlus />}
+              onClick={handleNewDimension}
+            >
+              Nueva dimensión
+            </Button>
+          </Stack>
         </Stack>
 
         {dimensions.length === 0 ? (

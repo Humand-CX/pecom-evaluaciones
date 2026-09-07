@@ -30,6 +30,12 @@ type DimensionsContextValue = {
   ) => void;
   deleteSubDimension: (dimensionId: string, subId: string) => void;
   duplicateDimension: (id: string) => void;
+  bulkImport: (
+    entries: {
+      name: string;
+      subDimensions: { name: string; description?: string }[];
+    }[],
+  ) => Promise<void>;
 };
 
 const DimensionsContext = createContext<DimensionsContextValue | null>(null);
@@ -160,6 +166,16 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
     ]);
   };
 
+  const bulkImport = async (
+    entries: {
+      name: string;
+      subDimensions: { name: string; description?: string }[];
+    }[],
+  ) => {
+    const created = await dimensionsService.bulkCreate(entries);
+    setDimensions(prev => [...prev, ...created.map(toFrontend)]);
+  };
+
   return (
     <DimensionsContext.Provider
       value={{
@@ -171,6 +187,7 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
         updateSubDimension,
         deleteSubDimension,
         duplicateDimension,
+        bulkImport,
       }}
     >
       {children}

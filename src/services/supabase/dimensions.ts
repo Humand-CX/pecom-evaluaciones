@@ -83,4 +83,30 @@ export const dimensionsService = {
       .eq('id', subId);
     if (error) throw error;
   },
+
+  async bulkCreate(
+    entries: {
+      name: string;
+      subDimensions: { name: string; description?: string }[];
+    }[],
+  ) {
+    const created: DimensionRow[] = [];
+    for (const entry of entries) {
+      const dimId = crypto.randomUUID();
+      const dimRow = await dimensionsService.create(dimId, entry.name);
+      const subRows: SubDimensionRow[] = [];
+      for (const sub of entry.subDimensions) {
+        const subId = crypto.randomUUID();
+        const subRow = await dimensionsService.addSubDimension(
+          subId,
+          dimId,
+          sub.name,
+          sub.description,
+        );
+        subRows.push(subRow);
+      }
+      created.push({ ...dimRow, sub_dimensions: subRows });
+    }
+    return created;
+  },
 };
