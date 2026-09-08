@@ -15,6 +15,7 @@ type DimensionsCSVImportModalProps = {
 
 type CSVRow = {
   dimension_name?: string;
+  dimension_description?: string;
   sub_dimension_name?: string;
   sub_dimension_description?: string;
 };
@@ -26,6 +27,7 @@ type ValidationError = {
 
 type ParsedEntry = {
   name: string;
+  description?: string;
   subDimensions: { name: string; description?: string }[];
 };
 
@@ -70,6 +72,8 @@ const parseCSV = (text: string): CSVRow[] => {
     const row: CSVRow = {};
     headers.forEach((header, idx) => {
       if (header === 'dimension_name') row.dimension_name = values[idx];
+      else if (header === 'dimension_description')
+        row.dimension_description = values[idx];
       else if (header === 'sub_dimension_name')
         row.sub_dimension_name = values[idx];
       else if (header === 'sub_dimension_description')
@@ -100,11 +104,11 @@ export const DimensionsCSVImportModal = ({
 
   const handleDownloadTemplate = () => {
     const header =
-      'dimension_name,sub_dimension_name,sub_dimension_description';
+      'dimension_name,dimension_description,sub_dimension_name,sub_dimension_description';
     const rows = [
-      'Disciplina Operacional,Compromiso con la seguridad,Cumplimiento de normas y procedimientos de seguridad',
-      'Disciplina Operacional,Puntualidad,Asistencia y cumplimiento de horarios',
-      'Conocimiento Técnico,Manejo de herramientas,Uso correcto del equipamiento asignado',
+      'Disciplina Operacional,Cumplimiento de normas y procedimientos internos,Compromiso con la seguridad,Cumplimiento de normas y procedimientos de seguridad',
+      'Disciplina Operacional,Cumplimiento de normas y procedimientos internos,Puntualidad,Asistencia y cumplimiento de horarios',
+      'Conocimiento Técnico,,Manejo de herramientas,Uso correcto del equipamiento asignado',
     ];
     downloadCsv('plantilla-dimensiones.csv', [header, ...rows].join('\n'));
   };
@@ -149,7 +153,11 @@ export const DimensionsCSVImportModal = ({
         const dimName = row.dimension_name!;
         let entry = byName.get(dimName);
         if (!entry) {
-          entry = { name: dimName, subDimensions: [] };
+          entry = {
+            name: dimName,
+            description: row.dimension_description || undefined,
+            subDimensions: [],
+          };
           byName.set(dimName, entry);
           entries.push(entry);
         }
@@ -196,11 +204,15 @@ export const DimensionsCSVImportModal = ({
       <Typography variant="body2">
         Cargá un archivo CSV con las columnas:
         <br />
-        <code>dimension_name,sub_dimension_name,sub_dimension_description</code>
+        <code>
+          dimension_name,dimension_description,sub_dimension_name,sub_dimension_description
+        </code>
         <br />
         Una fila por sub-dimensión — repetí el mismo{' '}
         <code>dimension_name</code> en varias filas para agrupar
-        sub-dimensiones bajo la misma dimensión. Esto siempre crea
+        sub-dimensiones bajo la misma dimensión. Las columnas de descripción
+        son opcionales, y <code>dimension_description</code> solo hace falta
+        completarla en la primera fila de cada dimensión. Esto siempre crea
         dimensiones nuevas (no reutiliza una existente con el mismo nombre).
       </Typography>
 

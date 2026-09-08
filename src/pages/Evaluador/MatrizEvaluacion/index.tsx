@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { IconInfoCircle } from '@material-hu/icons/tabler';
 import Divider from '@material-hu/mui/Divider';
 import Stack from '@material-hu/mui/Stack';
-import Tooltip from '@material-hu/mui/Tooltip';
 import Typography from '@material-hu/mui/Typography';
 
 import Button from '@material-hu/components/design-system/Buttons/Button';
@@ -16,6 +14,7 @@ import { useDialogLayer } from '@material-hu/components/layers/Dialogs';
 
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
 import { useDimensions } from '../../../providers/DimensionsContext';
+import { useScoreLabels } from '../../../providers/ScoreLabelsContext';
 import { useUser } from '../../../providers/UserContext';
 import { useHumandUsersByIds } from '../../../hooks/useHumandSegmentation';
 import { assignmentsService } from '../../../services/supabase/assignments';
@@ -41,6 +40,7 @@ export default function MatrizEvaluacionPage() {
   const navigate = useNavigate();
   const { openDialog, closeDialog } = useDialogLayer();
   const { dimensions } = useDimensions();
+  const { labels: scoreLabels } = useScoreLabels();
   const { user } = useUser();
   const evaluatorId = user?.humandUserId ? String(user.humandUserId) : null;
 
@@ -233,6 +233,35 @@ export default function MatrizEvaluacionPage() {
           </Typography>
         )}
 
+        {persons.length > 0 && (
+          <CardContainer
+            padding={16}
+            sx={{ width: '100%' }}
+          >
+            <Stack sx={{ gap: 1 }}>
+              <Typography variant="subtitle2">Escala de puntajes</Typography>
+              <Stack
+                sx={{ flexDirection: 'row', gap: 1, flexWrap: 'wrap' }}
+              >
+                {([1, 2, 3, 4, 5] as const).map(score => (
+                  <Pills
+                    key={score}
+                    label={`${score} — ${scoreLabels[score]}`}
+                    type={
+                      score === 1
+                        ? 'error'
+                        : score === 5
+                          ? 'success'
+                          : 'neutral'
+                    }
+                    size="small"
+                  />
+                ))}
+              </Stack>
+            </Stack>
+          </CardContainer>
+        )}
+
         {activeD.map(dim =>
           dim.subDimensions.map(sd => (
             <CardContainer
@@ -252,32 +281,23 @@ export default function MatrizEvaluacionPage() {
                   >
                     {dim.name}
                   </Typography>
-                  <Stack
-                    sx={{
-                      flexDirection: 'row',
-                      alignItems: 'flex-start',
-                      gap: 1,
-                    }}
-                  >
-                    <Typography variant="subtitle1">{sd.name}</Typography>
-                    {sd.description && (
-                      <Tooltip
-                        title={sd.description}
-                        arrow
-                        placement="top"
-                        sx={{ cursor: 'help' }}
-                      >
-                        <IconInfoCircle
-                          size={18}
-                          style={{
-                            marginTop: '2px',
-                            flexShrink: 0,
-                            opacity: 0.6,
-                          }}
-                        />
-                      </Tooltip>
-                    )}
-                  </Stack>
+                  {dim.description && (
+                    <Typography
+                      variant="caption"
+                      sx={{ color: 'text.secondary' }}
+                    >
+                      {dim.description}
+                    </Typography>
+                  )}
+                  <Typography variant="subtitle1">{sd.name}</Typography>
+                  {sd.description && (
+                    <Typography
+                      variant="body2"
+                      sx={{ color: 'text.secondary' }}
+                    >
+                      {sd.description}
+                    </Typography>
+                  )}
                 </Stack>
 
                 <Divider />

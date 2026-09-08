@@ -14,8 +14,8 @@ import { type Dimension } from '../pages/Evaluador/MatrizEvaluacion/types';
 
 type DimensionsContextValue = {
   dimensions: Dimension[];
-  addDimension: (name: string) => void;
-  updateDimension: (id: string, name: string) => void;
+  addDimension: (name: string, description?: string) => void;
+  updateDimension: (id: string, name: string, description?: string) => void;
   deleteDimension: (id: string) => void;
   addSubDimension: (
     dimensionId: string,
@@ -33,6 +33,7 @@ type DimensionsContextValue = {
   bulkImport: (
     entries: {
       name: string;
+      description?: string;
       subDimensions: { name: string; description?: string }[];
     }[],
   ) => Promise<void>;
@@ -43,6 +44,7 @@ const DimensionsContext = createContext<DimensionsContextValue | null>(null);
 const toFrontend = (row: DimensionRow): Dimension => ({
   id: row.id,
   name: row.name,
+  description: row.description ?? undefined,
   subDimensions: (row.sub_dimensions ?? []).map(sd => ({
     id: sd.id,
     name: sd.name,
@@ -57,16 +59,21 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
     dimensionsService.getAll().then(rows => setDimensions(rows.map(toFrontend)));
   }, []);
 
-  const addDimension = (name: string) => {
+  const addDimension = (name: string, description?: string) => {
     const id = crypto.randomUUID();
-    dimensionsService.create(id, name).then(() => {
-      setDimensions(prev => [...prev, { id, name, subDimensions: [] }]);
+    dimensionsService.create(id, name, description).then(() => {
+      setDimensions(prev => [
+        ...prev,
+        { id, name, description, subDimensions: [] },
+      ]);
     });
   };
 
-  const updateDimension = (id: string, name: string) => {
-    dimensionsService.update(id, name).then(() => {
-      setDimensions(prev => prev.map(d => (d.id === id ? { ...d, name } : d)));
+  const updateDimension = (id: string, name: string, description?: string) => {
+    dimensionsService.update(id, name, description).then(() => {
+      setDimensions(prev =>
+        prev.map(d => (d.id === id ? { ...d, name, description } : d)),
+      );
     });
   };
 
@@ -143,6 +150,7 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
     await dimensionsService.create(
       newId,
       `${dimensionToDuplicate.name} (Copia)`,
+      dimensionToDuplicate.description,
     );
     const newSubDimensions = [];
     for (const sd of dimensionToDuplicate.subDimensions) {
@@ -161,6 +169,7 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
       {
         id: newId,
         name: `${dimensionToDuplicate.name} (Copia)`,
+        description: dimensionToDuplicate.description,
         subDimensions: newSubDimensions,
       },
     ]);
@@ -169,6 +178,7 @@ export const DimensionsProvider = ({ children }: { children: ReactNode }) => {
   const bulkImport = async (
     entries: {
       name: string;
+      description?: string;
       subDimensions: { name: string; description?: string }[];
     }[],
   ) => {

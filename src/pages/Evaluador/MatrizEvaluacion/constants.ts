@@ -73,14 +73,6 @@ export const DIMENSIONS: Dimension[] = [
 
 export const SUB_DIMENSIONS = DIMENSIONS.flatMap(d => d.subDimensions);
 
-export const SCORE_LABELS: Record<number, string> = {
-  1: 'Nocivo',
-  2: 'Malo',
-  3: 'Regular',
-  4: 'Bueno',
-  5: 'Muy bueno',
-};
-
 export const MOCK_PEOPLE: Person[] = [
   {
     id: 'p1',

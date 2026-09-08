@@ -11,6 +11,7 @@ export interface SubDimensionRow {
 export interface DimensionRow {
   id: string;
   name: string;
+  description?: string | null;
   created_at?: string;
   sub_dimensions?: SubDimensionRow[];
 }
@@ -25,20 +26,20 @@ export const dimensionsService = {
     return data as DimensionRow[];
   },
 
-  async create(id: string, name: string) {
+  async create(id: string, name: string, description?: string) {
     const { data, error } = await supabase
       .from('dimensions')
-      .insert([{ id, name }])
+      .insert([{ id, name, description }])
       .select()
       .single();
     if (error) throw error;
     return data as DimensionRow;
   },
 
-  async update(id: string, name: string) {
+  async update(id: string, name: string, description?: string) {
     const { error } = await supabase
       .from('dimensions')
-      .update({ name })
+      .update({ name, description })
       .eq('id', id);
     if (error) throw error;
   },
@@ -87,13 +88,18 @@ export const dimensionsService = {
   async bulkCreate(
     entries: {
       name: string;
+      description?: string;
       subDimensions: { name: string; description?: string }[];
     }[],
   ) {
     const created: DimensionRow[] = [];
     for (const entry of entries) {
       const dimId = crypto.randomUUID();
-      const dimRow = await dimensionsService.create(dimId, entry.name);
+      const dimRow = await dimensionsService.create(
+        dimId,
+        entry.name,
+        entry.description,
+      );
       const subRows: SubDimensionRow[] = [];
       for (const sub of entry.subDimensions) {
         const subId = crypto.randomUUID();

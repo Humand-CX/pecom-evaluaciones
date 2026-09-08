@@ -17,6 +17,7 @@ export type SubDimension = {
 export type Dimension = {
   id: string;
   name: string;
+  description?: string;
   subDimensions: SubDimension[];
 };
 

@@ -3,7 +3,7 @@ import { useTheme } from '@material-hu/mui/styles';
 
 import Button from '@material-hu/components/design-system/Buttons/Button';
 
-import { SCORE_LABELS } from '../../constants';
+import { useScoreLabels } from '../../../../../providers/ScoreLabelsContext';
 import { type ScoreValue } from '../../types';
 
 type ScoreSelectorProps = {
@@ -20,11 +20,12 @@ export const ScoreSelector = ({
   disabled = false,
 }: ScoreSelectorProps) => {
   const theme = useTheme();
+  const { labels } = useScoreLabels();
 
   return (
     <Stack
       sx={{ flexDirection: 'row', gap: 0.5, flexShrink: 0 }}
-      title={value != null ? SCORE_LABELS[value] : undefined}
+      title={value != null ? labels[value] : undefined}
     >
       {SCORES.map(score => {
         const isSelected = value === score;

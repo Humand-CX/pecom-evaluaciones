@@ -13,6 +13,7 @@ import { MenuLayerProvider } from '@material-hu/components/layers/Menus';
 import { useAuth } from './contexts/Auth';
 import { DimensionsProvider } from './providers/DimensionsContext';
 import { EvaluatorAssignmentsProvider } from './providers/EvaluatorAssignmentsContext';
+import { ScoreLabelsProvider } from './providers/ScoreLabelsContext';
 import { SegmentsProvider } from './providers/SegmentsContext';
 import { UserProvider, useUser } from './providers/UserContext';
 import './i18n';
@@ -64,6 +65,7 @@ const App = () => {
               <DimensionsProvider>
                 <SegmentsProvider>
                   <EvaluatorAssignmentsProvider>
+                    <ScoreLabelsProvider>
                     <MenuLayerProvider>
                       <DialogLayerProvider>
                         <DrawerLayerProvider>
@@ -128,6 +130,7 @@ const App = () => {
                         </DrawerLayerProvider>
                       </DialogLayerProvider>
                     </MenuLayerProvider>
+                    </ScoreLabelsProvider>
                   </EvaluatorAssignmentsProvider>
                 </SegmentsProvider>
               </DimensionsProvider>

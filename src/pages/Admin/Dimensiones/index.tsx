@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +13,7 @@ import {
 } from '@material-hu/icons/tabler';
 import IconButton from '@material-hu/mui/IconButton';
 import Stack from '@material-hu/mui/Stack';
+import TextField from '@material-hu/mui/TextField';
 import Typography from '@material-hu/mui/Typography';
 
 import StateCard from '@material-hu/components/composed-components/StateCard';
@@ -25,11 +27,12 @@ import { useMenuLayer } from '@material-hu/components/layers/Menus';
 
 import { DashboardLayout } from '../../../layouts/DashboardLayout';
 import { useDimensions } from '../../../providers/DimensionsContext';
+import { useScoreLabels } from '../../../providers/ScoreLabelsContext';
 
 import { DimensionsCSVImportModal } from './DimensionsCSVImportModal';
 import {
-  type NameFormValues,
-  nameSchema,
+  type DimensionFormValues,
+  dimensionSchema,
   type SubDimensionFormValues,
   subDimensionSchema,
 } from './schema';
@@ -37,16 +40,20 @@ import {
 const FORM_ID = 'dimension-name-form';
 const FORM_ID_SUB = 'sub-dimension-form';
 
-type NameFormProps = {
-  onSubmit: (values: NameFormValues) => void;
-  defaultValues?: NameFormValues;
+type DimensionFormProps = {
+  onSubmit: (values: DimensionFormValues) => void;
+  defaultValues?: DimensionFormValues;
   placeholder?: string;
 };
 
-const NameForm = ({ onSubmit, defaultValues, placeholder }: NameFormProps) => {
-  const methods = useForm<NameFormValues>({
-    resolver: zodResolver(nameSchema),
-    defaultValues: defaultValues ?? { name: '' },
+const DimensionForm = ({
+  onSubmit,
+  defaultValues,
+  placeholder,
+}: DimensionFormProps) => {
+  const methods = useForm<DimensionFormValues>({
+    resolver: zodResolver(dimensionSchema),
+    defaultValues: defaultValues ?? { name: '', description: '' },
   });
 
   return (
@@ -55,11 +62,23 @@ const NameForm = ({ onSubmit, defaultValues, placeholder }: NameFormProps) => {
         id={FORM_ID}
         onSubmit={methods.handleSubmit(onSubmit)}
       >
-        <FormInputClassic
-          name="name"
-          inputProps={{ label: 'Nombre*', placeholder }}
-          rules={{}}
-        />
+        <Stack sx={{ gap: 2 }}>
+          <FormInputClassic
+            name="name"
+            inputProps={{ label: 'Nombre*', placeholder }}
+            rules={{}}
+          />
+          <FormInputClassic
+            name="description"
+            inputProps={{
+              label: 'Descripción',
+              placeholder: 'Explicación de qué evalúa esta dimensión (opcional)',
+              multiline: true,
+              minRows: 3,
+            }}
+            rules={{}}
+          />
+        </Stack>
       </form>
     </FormProvider>
   );
@@ -110,6 +129,78 @@ const SubDimensionForm = ({
   );
 };
 
+const SCORES = [1, 2, 3, 4, 5];
+
+const ScoreLabelsCard = () => {
+  const { labels, updateLabel, loading } = useScoreLabels();
+  const [draft, setDraft] = useState<Record<number, string>>(labels);
+
+  useEffect(() => {
+    if (!loading) setDraft(labels);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
+  const isDirty = SCORES.some(score => draft[score] !== labels[score]);
+
+  const handleSave = () => {
+    SCORES.forEach(score => {
+      if (draft[score] !== labels[score]) {
+        updateLabel(score, draft[score]);
+      }
+    });
+  };
+
+  return (
+    <CardContainer padding={16}>
+      <Stack sx={{ gap: 1.5 }}>
+        <Stack>
+          <Typography variant="subtitle2">Etiquetas de puntaje</Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.secondary' }}
+          >
+            Qué significa cada valor (1 a 5) al evaluar una sub-dimensión. Se
+            muestran al evaluador al abrir un ciclo.
+          </Typography>
+        </Stack>
+        <Stack
+          sx={{
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 2,
+            flexWrap: 'wrap',
+          }}
+        >
+          {SCORES.map(score => (
+            <Stack
+              key={score}
+              sx={{ flex: '1 1 140px', minWidth: 140 }}
+            >
+              <TextField
+                label={`Puntaje ${score}`}
+                size="small"
+                fullWidth
+                value={draft[score] ?? ''}
+                onChange={e =>
+                  setDraft(prev => ({ ...prev, [score]: e.target.value }))
+                }
+              />
+            </Stack>
+          ))}
+        </Stack>
+        <Button
+          variant="secondary"
+          size="small"
+          sx={{ alignSelf: 'flex-start' }}
+          disabled={!isDirty}
+          onClick={handleSave}
+        >
+          Guardar etiquetas
+        </Button>
+      </Stack>
+    </CardContainer>
+  );
+};
+
 export const DimensionesPage = () => {
   const {
     dimensions,
@@ -144,9 +235,9 @@ export const DimensionesPage = () => {
       title: 'Nueva dimensión',
       size: 'medium',
       children: (
-        <NameForm
+        <DimensionForm
           onSubmit={values => {
-            addDimension(values.name);
+            addDimension(values.name, values.description);
             closeDrawer();
           }}
           placeholder="Ej: Disciplina Operacional"
@@ -164,17 +255,21 @@ export const DimensionesPage = () => {
     });
   };
 
-  const handleEditDimension = (id: string, name: string) => {
+  const handleEditDimension = (
+    id: string,
+    name: string,
+    description?: string,
+  ) => {
     openDrawer({
       title: 'Editar dimensión',
       size: 'medium',
       children: (
-        <NameForm
+        <DimensionForm
           onSubmit={values => {
-            updateDimension(id, values.name);
+            updateDimension(id, values.name, values.description);
             closeDrawer();
           }}
-          defaultValues={{ name }}
+          defaultValues={{ name, description }}
         />
       ),
       primaryButtonProps: {
@@ -297,6 +392,7 @@ export const DimensionesPage = () => {
     e: React.MouseEvent<HTMLElement>,
     id: string,
     name: string,
+    description?: string,
   ) => {
     openMenu({
       anchorEl: e.currentTarget,
@@ -305,7 +401,7 @@ export const DimensionesPage = () => {
           id: 'edit',
           title: 'Editar',
           icon: IconEdit,
-          onSelect: () => handleEditDimension(id, name),
+          onSelect: () => handleEditDimension(id, name, description),
         },
         {
           id: 'duplicate',
@@ -387,6 +483,8 @@ export const DimensionesPage = () => {
           </Stack>
         </Stack>
 
+        <ScoreLabelsCard />
+
         {dimensions.length === 0 ? (
           <StateCard
             slotProps={{
@@ -410,9 +508,21 @@ export const DimensionesPage = () => {
                       alignItems: 'center',
                     }}
                   >
-                    <Typography variant="subtitle1">{dim.name}</Typography>
+                    <Stack>
+                      <Typography variant="subtitle1">{dim.name}</Typography>
+                      {dim.description && (
+                        <Typography
+                          variant="caption"
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          {dim.description}
+                        </Typography>
+                      )}
+                    </Stack>
                     <IconButton
-                      onClick={e => handleDimensionMenu(e, dim.id, dim.name)}
+                      onClick={e =>
+                        handleDimensionMenu(e, dim.id, dim.name, dim.description)
+                      }
                     >
                       <IconDotsVertical />
                     </IconButton>
