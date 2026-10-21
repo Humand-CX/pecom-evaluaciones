@@ -4,6 +4,7 @@ import {
   buildClearCookies,
   buildTokenCookies,
   exchangeCode,
+  isRefreshTokenRejected,
   parseCookies,
   refreshTokens,
   resolveSession,
@@ -56,7 +57,7 @@ async function handleCallback(req: VercelRequest, res: VercelResponse) {
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
 
 async function handleMe(req: VercelRequest, res: VercelResponse) {
-  const session = await resolveSession(req);
+  const session = await resolveSession(req, res);
 
   if (!session) {
     return res.status(401).json({ error: 'Unauthenticated' });
@@ -96,7 +97,8 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
     const tokens = await refreshTokens(refreshToken);
     res.setHeader('Set-Cookie', buildTokenCookies(tokens));
     return res.status(200).json({ ok: true });
-  } catch {
+  } catch (error) {
+    if (isRefreshTokenRejected(error)) res.setHeader('Set-Cookie', buildClearCookies());
     return res.status(401).json({ error: 'Refresh failed' });
   }
 }
