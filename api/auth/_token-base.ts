@@ -44,6 +44,35 @@ export interface JwtPayload {
   user_id?: number;
 }
 
+/** Minimal response surface `resolveSession` needs to clear the session cookies. */
+export interface CookieWriter {
+  setHeader(name: string, value: string[]): unknown;
+}
+
+/**
+ * An error response from Janus `/oauth2/token`. `error` is the OAuth error code
+ * (`invalid_grant`, `invalid_client`, ...).
+ */
+export class JanusTokenError extends Error {
+  readonly status: number;
+  readonly error: string | undefined;
+
+  constructor(status: number, error: string | undefined) {
+    super(`Janus ${status}: ${error}`);
+    this.status = status;
+    this.error = error;
+  }
+}
+
+/**
+ * True when Janus rejected the refresh token itself: it was already used,
+ * revoked, or expired. Retrying with the same token always fails, so the
+ * session is gone and the cookies must be cleared.
+ */
+export function isRefreshTokenRejected(error: unknown): boolean {
+  return error instanceof JanusTokenError && error.error === 'invalid_grant';
+}
+
 export interface Session {
   user: JwtPayload;
   accessToken: string;
@@ -72,8 +101,8 @@ export async function callJanusToken(body: URLSearchParams): Promise<TokenSet> {
     });
 
     if (!res.ok) {
-      const errorBody = await res.json();
-      throw new Error(`Janus ${res.status}: ${(errorBody as { error?: string }).error}`);
+      const errorBody = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new JanusTokenError(res.status, errorBody.error);
     }
 
     return res.json() as Promise<TokenSet>;
@@ -96,7 +125,7 @@ export async function refreshTokens(refreshToken: string): Promise<TokenSet> {
 
 export function buildTokenCookies(tokens: TokenSet): string[] {
   const accessMaxAge = tokens.expires_in ?? 900;
-  const refreshMaxAge = 60 * 60 * 24 * 30; // 30 days
+  const refreshMaxAge = 60 * 60 * 24 * 7; // 7 days: the longest Janus refresh token lifetime (STAFF)
   return [
     `${COOKIE_ACCESS}=${tokens.access_token}; Max-Age=${accessMaxAge}; ${COOKIE_OPTS}`,
     `${COOKIE_REFRESH}=${tokens.refresh_token}; Max-Age=${refreshMaxAge}; ${COOKIE_OPTS}`,
@@ -140,9 +169,23 @@ function isExpired(payload: JwtPayload): boolean {
 
 // ── Session resolution ────────────────────────────────────────────────────────
 
-export async function resolveSession(req: {
-  headers: { cookie?: string | string[] };
-}): Promise<Session | null> {
+/**
+ * Returns the session from the cookies, refreshing it when the access token
+ * expired. Every caller must forward `renewedCookies`: Janus rotates STAFF
+ * refresh tokens on each refresh, so a dropped cookie leaves a dead token.
+ *
+ * Pass `res` only from the auth routes (`/api/auth/me`). When Janus rejects the
+ * refresh token, `resolveSession` then clears the session cookies on `res`.
+ * Data routes call it without `res` and only answer 401: they run in parallel,
+ * and the request that loses a STAFF refresh race also gets `invalid_grant`.
+ * Clearing there could erase the cookies the winning request just set.
+ */
+export async function resolveSession(
+  req: {
+    headers: { cookie?: string | string[] };
+  },
+  res?: CookieWriter,
+): Promise<Session | null> {
   const cookies = parseCookies(req);
   const accessToken = cookies[COOKIE_ACCESS];
   const refreshToken = cookies[COOKIE_REFRESH];
@@ -166,7 +209,8 @@ export async function resolveSession(req: {
       accessToken: tokens.access_token,
       renewedCookies: buildTokenCookies(tokens),
     };
-  } catch {
+  } catch (error) {
+    if (res && isRefreshTokenRejected(error)) res.setHeader('Set-Cookie', buildClearCookies());
     return null;
   }
 }

@@ -6,13 +6,21 @@ import {
   buildClearCookies,
   buildTokenCookies,
   parseCookies,
+  isRefreshTokenRejected,
   refreshTokens,
   resolveSession,
   PRIMARY_AUDIENCE,
 } from './_token-base.js';
 
 export type { TokenSet, JwtPayload, Session };
-export { buildClearCookies, buildTokenCookies, parseCookies, refreshTokens, resolveSession };
+export {
+  buildClearCookies,
+  buildTokenCookies,
+  parseCookies,
+  isRefreshTokenRejected,
+  refreshTokens,
+  resolveSession,
+};
 
 const APP_CALLBACK_URL = process.env.APP_CALLBACK_URL!;
 
